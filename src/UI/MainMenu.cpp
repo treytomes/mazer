@@ -7,8 +7,8 @@
 
 namespace UI
 {
-    static const int   NUM_ITEMS      = 3;
-    static const char* ITEM_LABELS[NUM_ITEMS] = { "Play", "SFX", "Quit" };
+    static const int   NUM_ITEMS      = 4;
+    static const char* ITEM_LABELS[NUM_ITEMS] = { "Play", "SFX", "Settings", "Quit" };
     static const int   BLINK_SPEED_MS = 400;
     static const int   CHAR_W         = 8;
     static const int   CHAR_H         = 8;
@@ -64,6 +64,8 @@ namespace UI
                 _result = MainMenuResult::Play;
             else if (_selected == 1)
                 _result = MainMenuResult::SFX;
+            else if (_selected == 2)
+                _result = MainMenuResult::Settings;
             else
             {
                 AUDIO::SfxPlayer::play(AUDIO::Presets::PowerDown());

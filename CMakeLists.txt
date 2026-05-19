@@ -36,6 +36,8 @@ add_executable(mazer
 	"src/UI/CurtainTransition.cpp"
 	"src/UI/MainMenu.cpp"
 	"src/UI/SfxEditor.cpp"
+	"src/UI/SettingsScreen.cpp"
+	"src/Settings.cpp"
 	"src/AUDIO/SfxParams.cpp"
 	"src/AUDIO/SfxGenerator.cpp"
 	"src/AUDIO/AudioSystem.cpp"

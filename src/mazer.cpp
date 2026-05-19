@@ -24,6 +24,8 @@ and last for 10 seconds.
 #include "UI/ScoreScreen.h"
 #include "UI/CurtainTransition.h"
 #include "UI/SfxEditor.h"
+#include "UI/SettingsScreen.h"
+#include "Settings.h"
 #include "AUDIO/AudioSystem.h"
 #include "AUDIO/SfxPlayer.h"
 #include "AUDIO/SfxParams.h"
@@ -292,7 +294,7 @@ void updatePlayerEvents() //SDL_Event &e)
 		}
 	}
 
-	if (state[SDL_SCANCODE_UP])
+	if (state[g_settings.key_up])
 	{
 		if (should_place_block)
 		{
@@ -306,7 +308,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.y_target = player.y - cell_size;
 		}
 	}
-	else if (state[SDL_SCANCODE_DOWN])
+	else if (state[g_settings.key_down])
 	{
 		if (should_place_block)
 		{
@@ -320,7 +322,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.y_target = player.y + cell_size;
 		}
 	}
-	else if (state[SDL_SCANCODE_LEFT])
+	else if (state[g_settings.key_left])
 	{
 		if (should_place_block)
 		{
@@ -334,7 +336,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.x_target = player.x - cell_size;
 		}
 	}
-	else if (state[SDL_SCANCODE_RIGHT])
+	else if (state[g_settings.key_right])
 	{
 		if (should_place_block)
 		{
@@ -886,6 +888,10 @@ int main(int argc, char *argv[])
 
 	AUDIO::AudioSystem::instance().initialize();
 
+	g_settings.load();
+	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_BGM, g_settings.bgm_volume);
+	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_SFX, g_settings.sfx_volume);
+
 	const int SW = mode->getScreenWidth();
 	const int SH = mode->getScreenHeight();
 
@@ -979,6 +985,39 @@ int main(int argc, char *argv[])
 				// Return to menu after SFX editor closes.
 				continue;
 			}
+
+			if (main_menu.result() == UI::MainMenuResult::Settings)
+			{
+				UI::SettingsScreen settings_screen(SW, SH, g_settings);
+				while (!settings_screen.wantsClose())
+				{
+					Uint32 frame_start = SDL_GetTicks();
+
+					KEYBOARD::setScanCode(0);
+					while (SDL_PollEvent(&e) != 0)
+					{
+						KEYBOARD::respondToEvent(e);
+						if (e.type == SDL_QUIT)
+						{
+							settings_screen.close();
+							keep_playing = false;
+						}
+					}
+
+					settings_screen.update(SCREEN_TICKS_PER_FRAME);
+					bgm.update(SCREEN_TICKS_PER_FRAME);
+
+					mode->clearGraphicsScreen(0);
+					settings_screen.draw(mode);
+					mode->render();
+
+					Uint32 elapsed = SDL_GetTicks() - frame_start;
+					if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+						SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
+				}
+				// Return to menu after settings closes.
+				continue;
+			}
 		}
 		show_menu = true; // reset for next iteration; Y can set it false below
 
@@ -1033,34 +1072,27 @@ int main(int argc, char *argv[])
 					is_done = true;
 					break;
 				case SDL_KEYDOWN:
-					switch (e.key.keysym.sym)
+					if (e.key.keysym.sym == SDLK_ESCAPE)
 					{
-					case SDLK_ESCAPE:
 						is_done = true;
-						break;
-					case SDLK_TAB:
-						if (e.key.repeat == 0)
-						{
-							is_paused = !is_paused;
-							pause_menu.setVisible(is_paused);
-						}
-						break;
-#ifdef ALLOW_SHOW_SOLUTION
-					case SDLK_BACKQUOTE:
-						show_solution = true;
-						break;
-#endif
 					}
+					else if (e.key.keysym.scancode == g_settings.key_pause && e.key.repeat == 0)
+					{
+						is_paused = !is_paused;
+						pause_menu.setVisible(is_paused);
+					}
+#ifdef ALLOW_SHOW_SOLUTION
+					else if (e.key.keysym.scancode == g_settings.key_solution)
+					{
+						show_solution = true;
+					}
+#endif
 					break;
 				case SDL_KEYUP:
-					switch (e.key.keysym.sym)
-					{
 #ifdef ALLOW_SHOW_SOLUTION
-					case SDLK_BACKQUOTE:
+					if (e.key.keysym.scancode == g_settings.key_solution)
 						show_solution = false;
-						break;
 #endif
-					}
 					break;
 				}
 			}

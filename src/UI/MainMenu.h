@@ -4,7 +4,7 @@
 
 namespace UI
 {
-    enum class MainMenuResult { None, Play, SFX, Quit };
+    enum class MainMenuResult { None, Play, SFX, Settings, Quit };
 
     class MainMenu : public Widget
     {
