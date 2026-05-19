@@ -1059,6 +1059,10 @@ int main(int argc, char *argv[])
 		maze = nullptr;
 
 		// ---- Score screen ----
+		// Reset is_done so Escape-to-exit-game doesn't prevent N from returning
+		// to the menu. Only SDL_QUIT during the score screen should kill the loop.
+		is_done = false;
+
 		UI::ScoreScreen* score_screen = new UI::ScoreScreen(
 			SW, SH, player.health, (int)seconds, player.score, finished_maze);
 
