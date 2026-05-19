@@ -24,6 +24,11 @@ add_executable(mazer
 target_link_libraries(mazer SDL2::SDL2)
 target_include_directories(mazer PRIVATE ${SDL2_INCLUDE_DIRS})
 
+option(MAZER_LOGGING "Enable diagnostic logging output" OFF)
+if(MAZER_LOGGING)
+	target_compile_definitions(mazer PRIVATE MAZER_LOGGING)
+endif()
+
 if(WIN32)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 		add_custom_command(TARGET mazer POST_BUILD			# Adds a post-build event to dossim
