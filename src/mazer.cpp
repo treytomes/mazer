@@ -145,6 +145,7 @@ bool show_solution = false;
 #endif
 
 bool finished_maze;
+bool demo_mode = false;
 
 /*
  * Whirligigs.
@@ -234,6 +235,44 @@ void tryPlaceBlock(int x_delta, int y_delta)
 	block->y = block_row * maze->MAZE_CELL_SIZE;
 	last_frame_placed_block = true;
 	remaining_blocks--;
+}
+
+// AI for demo mode: follows the Dijkstra map toward the finish.
+// Mirrors the movement logic in updatePlayerEvents but reads the map
+// instead of the keyboard.  Called only when demo_mode is true.
+void updateDemoAI()
+{
+	bool in_motion = (player.x != player.x_target) || (player.y != player.y_target);
+	if (in_motion) return;
+
+	const int cell_size = maze->MAZE_CELL_SIZE;
+	int row    = player.y / cell_size;
+	int column = player.x / cell_size;
+
+	// Already reached the finish cell?  Nothing to do.
+	if (row == maze->finish_row && column == maze->finish_column) return;
+
+	const int MAX_SCORE = 9999;
+	int cur = maze->getDijkstra(row, column);
+	if (cur <= 0) return;
+
+	MazeCell* cell = maze->getCell(row, column);
+
+	int n_score = (row - 1) >= 0            ? maze->getDijkstra(row - 1, column) : MAX_SCORE;
+	int s_score = (row + 1) < maze->rows    ? maze->getDijkstra(row + 1, column) : MAX_SCORE;
+	int w_score = (column - 1) >= 0         ? maze->getDijkstra(row, column - 1) : MAX_SCORE;
+	int e_score = (column + 1) < maze->columns ? maze->getDijkstra(row, column + 1) : MAX_SCORE;
+
+	int target = cur - 1;
+
+	if (cell->north_open && n_score <= target)
+		player.y_target = player.y - cell_size;
+	else if (cell->south_open && s_score <= target)
+		player.y_target = player.y + cell_size;
+	else if (cell->west_open  && w_score <= target)
+		player.x_target = player.x - cell_size;
+	else if (cell->east_open  && e_score <= target)
+		player.x_target = player.x + cell_size;
 }
 
 void updatePlayerEvents() //SDL_Event &e)
@@ -912,11 +951,15 @@ int main(int argc, char *argv[])
 		if (show_menu)
 		{
 			bgm.setParams(AUDIO::BgmThemes::Menu());
+			demo_mode = false;
 			UI::MainMenu main_menu(SW, SH);
+			static const Uint32 DEMO_IDLE_MS = 8000;
+			Uint32 idle_timer = 0;
 			while (!main_menu.wantsClose())
 			{
 				Uint32 frame_start = SDL_GetTicks();
 
+				bool got_input = false;
 				KEYBOARD::setScanCode(0);
 				while (SDL_PollEvent(&e) != 0)
 				{
@@ -931,6 +974,22 @@ int main(int argc, char *argv[])
 						main_menu.close();
 						keep_playing = false;
 					}
+					else if (e.type == SDL_KEYDOWN || e.type == SDL_MOUSEBUTTONDOWN)
+					{
+						got_input = true;
+					}
+				}
+
+				if (got_input)
+					idle_timer = 0;
+				else
+					idle_timer += SCREEN_TICKS_PER_FRAME;
+
+				if (idle_timer >= DEMO_IDLE_MS)
+				{
+					demo_mode = true;
+					main_menu.close();
+					break;
 				}
 
 				if (KEYBOARD::getScanCode() == SDL_SCANCODE_RETURN && KEYBOARD::isAltPressed())
@@ -1023,8 +1082,12 @@ int main(int argc, char *argv[])
 
 		// ---- Round setup ----
 		bool is_done = false;
+		Uint32 demo_elapsed_ms = 0;
+		static const Uint32 DEMO_DURATION_MS = 30000;
+
 		maze = new Maze();
-		setRandSeed(maze_seed);
+		// Demo uses a different seed so the player sees a fresh maze during attract mode.
+		setRandSeed(demo_mode ? maze_seed + 1000 : maze_seed);
 		generateMaze(maze);
 
 		player.jumpTo(maze->start_column * maze->MAZE_CELL_SIZE + 3,
@@ -1072,7 +1135,12 @@ int main(int argc, char *argv[])
 					is_done = true;
 					break;
 				case SDL_KEYDOWN:
-					if (e.key.keysym.sym == SDLK_ESCAPE)
+					if (demo_mode)
+					{
+						// Any key press ends the demo and returns to menu.
+						is_done = true;
+					}
+					else if (e.key.keysym.sym == SDLK_ESCAPE)
 					{
 						is_done = true;
 					}
@@ -1108,9 +1176,19 @@ int main(int argc, char *argv[])
 			}
 			else
 			{
-				updatePlayerEvents();
+				if (demo_mode)
+				{
+					demo_elapsed_ms += dt;
+					if (demo_elapsed_ms >= DEMO_DURATION_MS)
+						is_done = true;
+					updateDemoAI();
+				}
+				else
+				{
+					updatePlayerEvents();
+				}
 				updatePlayer();
-				updateWhirligigs();
+				if (!demo_mode) updateWhirligigs();
 				updateBlocks();
 				updateTime();
 
@@ -1126,6 +1204,14 @@ int main(int argc, char *argv[])
 			bgm.update(dt);
 
 			drawEverything(mode, &hud, &pause_menu);
+
+			if (demo_mode)
+			{
+				const char* demo_label = "DEMO - PRESS ANY KEY";
+				int lx = (SW - (int)strlen(demo_label) * 8) / 2;
+				mode->drawString(lx, SH - 12, 0xF0, demo_label);
+			}
+
 			mode->render();
 
 			Uint32 elapsed = SDL_GetTicks() - frame_start;
@@ -1151,6 +1237,14 @@ int main(int argc, char *argv[])
 		maze = nullptr;
 
 		bgm.stop();
+
+		// In demo mode skip the score screen and return straight to the menu.
+		if (demo_mode)
+		{
+			demo_mode = false;
+			show_menu = true;
+			continue;
+		}
 
 		// ---- Score screen ----
 		// Reset is_done so Escape-to-exit-game doesn't prevent N from returning
