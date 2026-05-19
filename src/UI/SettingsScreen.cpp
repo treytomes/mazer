@@ -3,17 +3,21 @@
 #include "../AUDIO/AudioSystem.h"
 #include "../AUDIO/SfxPlayer.h"
 #include "../AUDIO/SfxParams.h"
+#include "../SYSTEM/SYSTEM.h"
 #include <stdio.h>
 #include <string.h>
 
 namespace UI
 {
+    enum RowType { ROW_VOLUME, ROW_BINDING, ROW_TOGGLE };
+
     struct RowDesc
     {
-        const char* label;
-        bool        is_volume;  // true = volume row, false = binding row
-        SDL_Scancode* binding;  // non-null for binding rows
-        float*       volume;    // non-null for volume rows
+        const char*   label;
+        RowType       type;
+        SDL_Scancode* binding;  // ROW_BINDING
+        float*        volume;   // ROW_VOLUME
+        bool*         toggle;   // ROW_TOGGLE
     };
 
     static const float VOL_STEP  = 0.05f;
@@ -35,14 +39,15 @@ namespace UI
 
     static void buildRows(Settings& s, RowDesc rows[])
     {
-        rows[0] = { "BGM Volume",       true,  nullptr,         &s.bgm_volume   };
-        rows[1] = { "SFX Volume",       true,  nullptr,         &s.sfx_volume   };
-        rows[2] = { "Move Up",          false, &s.key_up,       nullptr         };
-        rows[3] = { "Move Down",        false, &s.key_down,     nullptr         };
-        rows[4] = { "Move Left",        false, &s.key_left,     nullptr         };
-        rows[5] = { "Move Right",       false, &s.key_right,    nullptr         };
-        rows[6] = { "Pause",            false, &s.key_pause,    nullptr         };
-        rows[7] = { "Show Solution",    false, &s.key_solution, nullptr         };
+        rows[0] = { "Fullscreen",    ROW_TOGGLE,  nullptr,         nullptr,        &s.fullscreen  };
+        rows[1] = { "BGM Volume",    ROW_VOLUME,  nullptr,         &s.bgm_volume,  nullptr        };
+        rows[2] = { "SFX Volume",    ROW_VOLUME,  nullptr,         &s.sfx_volume,  nullptr        };
+        rows[3] = { "Move Up",       ROW_BINDING, &s.key_up,       nullptr,        nullptr        };
+        rows[4] = { "Move Down",     ROW_BINDING, &s.key_down,     nullptr,        nullptr        };
+        rows[5] = { "Move Left",     ROW_BINDING, &s.key_left,     nullptr,        nullptr        };
+        rows[6] = { "Move Right",    ROW_BINDING, &s.key_right,    nullptr,        nullptr        };
+        rows[7] = { "Pause",         ROW_BINDING, &s.key_pause,    nullptr,        nullptr        };
+        rows[8] = { "Show Solution", ROW_BINDING, &s.key_solution, nullptr,        nullptr        };
     }
 
     void SettingsScreen::updateSelf(Uint32 dt)
@@ -100,7 +105,7 @@ namespace UI
 
         RowDesc& row = rows[_selected];
 
-        if (row.is_volume)
+        if (row.type == ROW_VOLUME)
         {
             float delta = 0.0f;
             if (key == SDL_SCANCODE_LEFT)  delta = -VOL_STEP;
@@ -118,7 +123,21 @@ namespace UI
                 KEYBOARD::setScanCode(0);
             }
         }
-        else
+        else if (row.type == ROW_TOGGLE)
+        {
+            bool activate = (key == SDL_SCANCODE_LEFT  ||
+                             key == SDL_SCANCODE_RIGHT ||
+                             key == SDL_SCANCODE_RETURN ||
+                             key == SDL_SCANCODE_KP_ENTER);
+            if (activate)
+            {
+                *row.toggle = !*row.toggle;
+                SYSTEM::toggleFullscreen();
+                AUDIO::SfxPlayer::play(AUDIO::Presets::MenuNavigate());
+                KEYBOARD::setScanCode(0);
+            }
+        }
+        else // ROW_BINDING
         {
             if (key == SDL_SCANCODE_RETURN || key == SDL_SCANCODE_KP_ENTER)
             {
@@ -188,11 +207,16 @@ namespace UI
             mode->drawString(abs_x + 8, y, col, lbuf);
 
             // Right column: value
-            if (rows[i].is_volume)
+            if (rows[i].type == ROW_VOLUME)
             {
                 drawVolumeBar(mode, abs_x + 8 + 18 * 8, y, *rows[i].volume, sel);
             }
-            else
+            else if (rows[i].type == ROW_TOGGLE)
+            {
+                const char* val = *rows[i].toggle ? "ON" : "OFF";
+                mode->drawString(abs_x + 8 + 18 * 8, y, col, val);
+            }
+            else // ROW_BINDING
             {
                 const char* name;
                 if (_rebinding == i)
@@ -206,8 +230,8 @@ namespace UI
 
             y += 10;
 
-            // Section separator between volumes and bindings.
-            if (i == 1)
+            // Section separators.
+            if (i == 0 || i == 2)
                 y += 4;
         }
 

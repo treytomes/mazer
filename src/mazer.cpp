@@ -930,6 +930,8 @@ int main(int argc, char *argv[])
 	g_settings.load();
 	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_BGM, g_settings.bgm_volume);
 	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_SFX, g_settings.sfx_volume);
+	if (g_settings.fullscreen)
+		SYSTEM::toggleFullscreen();
 
 	const int SW = mode->getScreenWidth();
 	const int SH = mode->getScreenHeight();

@@ -23,9 +23,9 @@ namespace UI
         int       _screen_height;
         Settings& _settings;
 
-        // Rows: 0=BGM vol, 1=SFX vol, 2=key_up, 3=key_down,
-        //       4=key_left, 5=key_right, 6=key_pause, 7=key_solution
-        static const int ROW_COUNT = 8;
+        // Rows: 0=fullscreen, 1=BGM vol, 2=SFX vol, 3=key_up, 4=key_down,
+        //       5=key_left, 6=key_right, 7=key_pause, 8=key_solution
+        static const int ROW_COUNT = 9;
         int  _selected;
 
         // When >= 0, we're waiting for a key press to rebind this row.

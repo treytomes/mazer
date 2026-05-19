@@ -8,6 +8,7 @@ Settings g_settings;
 Settings Settings::defaults()
 {
     Settings s;
+    s.fullscreen   = false;
     s.bgm_volume   = 0.25f;
     s.sfx_volume   = 0.50f;
     s.key_up       = SDL_SCANCODE_UP;
@@ -49,7 +50,8 @@ bool Settings::load()
     char val[64];
     while (fscanf(f, "%63s %63s", key, val) == 2)
     {
-        if      (strcmp(key, "bgm_volume")   == 0) bgm_volume   = (float)atof(val);
+        if      (strcmp(key, "fullscreen")    == 0) fullscreen   = atoi(val) != 0;
+        else if (strcmp(key, "bgm_volume")   == 0) bgm_volume   = (float)atof(val);
         else if (strcmp(key, "sfx_volume")   == 0) sfx_volume   = (float)atof(val);
         else if (strcmp(key, "key_up")       == 0) key_up       = (SDL_Scancode)atoi(val);
         else if (strcmp(key, "key_down")     == 0) key_down     = (SDL_Scancode)atoi(val);
@@ -68,6 +70,7 @@ void Settings::save() const
     FILE* f = fopen(settingsPath(), "w");
     if (!f) return;
 
+    fprintf(f, "fullscreen   %d\n",   fullscreen ? 1 : 0);
     fprintf(f, "bgm_volume   %.3f\n", bgm_volume);
     fprintf(f, "sfx_volume   %.3f\n", sfx_volume);
     fprintf(f, "key_up       %d\n",   (int)key_up);

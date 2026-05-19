@@ -4,6 +4,9 @@
 
 struct Settings
 {
+    // Display.
+    bool fullscreen;
+
     // Volume levels (0.0–1.0).
     float bgm_volume;
     float sfx_volume;
