@@ -58,20 +58,20 @@ namespace CGA
 
 		// "draw" methods draw to the screen.  "write" methods write to text memory.
 
-		void drawCircle(int xc, int yc, int r, Uint8 color);
-		void drawLine(int x1, int y1, int x2, int y2, Uint8 color);
-		void drawHLine(int x1, int x2, int y, Uint8 color);
-		void drawVLine(int x, int y1, int y2, Uint8 color);
-		void drawFilledRect(int x1, int x2, int y1, int y2, Uint8 color);
+		virtual void drawCircle(int xc, int yc, int r, Uint8 color);
+		virtual void drawLine(int x1, int y1, int x2, int y2, Uint8 color);
+		virtual void drawHLine(int x1, int x2, int y, Uint8 color);
+		virtual void drawVLine(int x, int y1, int y2, Uint8 color);
+		virtual void drawFilledRect(int x1, int x2, int y1, int y2, Uint8 color);
 
-		void drawBitmap(int x, int y, Uint8 fgColor, Uint8 bgColor, unsigned char *bitmap);
+		virtual void drawBitmap(int x, int y, Uint8 fgColor, Uint8 bgColor, unsigned char *bitmap);
 
 		//inline void drawChar(Uint16 x, Uint16 y, Uint8 fgColor, Uint8 bgColor, unsigned char ch) { drawCharInternal(y * getScreenWidth() + x, fgColor, bgColor, ch); }
-		void drawChar(int x, int y, Uint8 fgColor, Uint8 bgColor, unsigned char ch);
+		virtual void drawChar(int x, int y, Uint8 fgColor, Uint8 bgColor, unsigned char ch);
 		inline void drawChar(int x, int y, Uint8 attr, unsigned char ch) { drawChar(x, y, attr >> 4, attr & 0xF, ch); }
 
 
-		void drawString(int x, int y, Uint8 fgColor, Uint8 bgColor, const char* text);
+		virtual void drawString(int x, int y, Uint8 fgColor, Uint8 bgColor, const char* text);
 		inline void drawString(int x, int y, Uint8 attr, const char* text) { drawString(x, y, attr >> 4, attr & 0xF, text); }
 
 		// Draw a series of squares to the screen, to show off the aspect ratio.

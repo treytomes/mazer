@@ -12,6 +12,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(SDL2 REQUIRED)
 
+enable_testing()
+add_subdirectory(tests)
+
 add_executable(mazer
 	"mazer/CGA/GraphicsMode.cpp"
 	"mazer/CGA/TextMode.cpp"
