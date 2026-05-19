@@ -82,7 +82,12 @@ public:
 	{
 		rows = MAZE_ROWS;
 		columns = MAZE_COLUMNS;
-		
+
+		start_row = 0;
+		start_column = 0;
+		finish_row = 0;
+		finish_column = 0;
+
 		cells = new MazeCell[MAZE_ROWS * MAZE_COLUMNS];
 		dijkstra_map = new int[MAZE_ROWS * MAZE_COLUMNS];
 		clearDijkstra();
