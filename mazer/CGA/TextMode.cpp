@@ -108,11 +108,6 @@ bool CGA::TextMode::render()
 		Uint8 ch = _textMemory[index];
 		Uint8 attr = _textMemory[index + 1];
 
-		if ((y == 19 * 8) && (x == 37 * 8))
-		{
-			int a = 0;
-		}
-
 		drawChar(x, y, attr, ch);
 
 		x += OEM437::CHAR_WIDTH;
