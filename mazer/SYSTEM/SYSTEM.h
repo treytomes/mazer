@@ -58,7 +58,7 @@ namespace SYSTEM
 	inline SDL_Color convertHtmlGrayscale(unsigned int htmlColor)
 	{
 		SDL_Color color;
-		Uint8 gray = (Uint8)((htmlColor >> 16) * 0.02126 + ((htmlColor >> 8) & 0xFF) * 0.7152 + (htmlColor & 0xFF) * 0.0722);
+		Uint8 gray = (Uint8)((htmlColor >> 16) * 0.2126 + ((htmlColor >> 8) & 0xFF) * 0.7152 + (htmlColor & 0xFF) * 0.0722);
 		color.r = color.g = color.b = gray;
 		color.a = 0;
 		return color;
