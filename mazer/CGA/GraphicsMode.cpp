@@ -259,9 +259,9 @@ void CGA::GraphicsMode::drawFilledRect(int x1, int x2, int y1, int y2, Uint8 col
 		y2 = tmp;
 	}
 
-	for (int x = x1; x <= x2; x++)
+	for (int y = y1; y <= y2; y++)
 	{
-		for (int y = y1; y <= y2; y++)
+		for (int x = x1; x <= x2; x++)
 		{
 			setPixel(x, y, color);
 		}
