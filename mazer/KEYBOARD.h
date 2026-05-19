@@ -23,7 +23,7 @@ namespace KEYBOARD
 	const int CTRL_BIT = 1;
 	const int SHIFT_BIT = 2;
 
-	void setAltPressed(bool value)
+	inline void setAltPressed(bool value)
 	{
 		if (value)
 		{
@@ -35,7 +35,7 @@ namespace KEYBOARD
 		}
 	}
 
-	void setCtrlPressed(bool value)
+	inline void setCtrlPressed(bool value)
 	{
 		if (value)
 		{
@@ -47,7 +47,7 @@ namespace KEYBOARD
 		}
 	}
 
-	void setShiftPressed(bool value)
+	inline void setShiftPressed(bool value)
 	{
 		if (value)
 		{
@@ -59,32 +59,32 @@ namespace KEYBOARD
 		}
 	}
 
-	bool isAltPressed()
+	inline bool isAltPressed()
 	{
 		return CHECK_BIT(SYSTEM::memory[MEM_KEYFLAGS], ALT_BIT);
 	}
 
-	bool isCtrlPressed()
+	inline bool isCtrlPressed()
 	{
 		return CHECK_BIT(SYSTEM::memory[MEM_KEYFLAGS], CTRL_BIT);
 	}
 
-	bool isShiftPressed()
+	inline bool isShiftPressed()
 	{
 		return CHECK_BIT(SYSTEM::memory[MEM_KEYFLAGS], SHIFT_BIT);
 	}
 
-	unsigned char getScanCode()
+	inline unsigned char getScanCode()
 	{
 		return SYSTEM::memory[MEM_SCANCODE];
 	}
 
-	void setScanCode(unsigned char value)
+	inline void setScanCode(unsigned char value)
 	{
 		SYSTEM::memory[MEM_SCANCODE] = value;
 	}
 
-	void respondToEvent(SDL_Event &e)
+	inline void respondToEvent(SDL_Event &e)
 	{
 		switch (e.type)
 		{
