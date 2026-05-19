@@ -1350,7 +1350,11 @@ int main(int argc, char *argv[])
 
 			mode->render();
 
-			SDL_Delay(SCREEN_TICKS_PER_FRAME - (SDL_GetTicks() - frame_start_time));
+			Uint32 frame_elapsed = SDL_GetTicks() - frame_start_time;
+			if (frame_elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+			{
+				SDL_Delay(SCREEN_TICKS_PER_FRAME - frame_elapsed);
+			}
 		}
 
 		closeCurtainFx(mode);
