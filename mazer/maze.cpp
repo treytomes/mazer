@@ -133,24 +133,20 @@ int calculateFarthestCell(Maze *maze, int &target_row, int &target_column)
 
 void generatePrize(Maze *maze, int row, int column)
 {
-	//LOG_ENTER();
-
 	MazeCell *cell = maze->getCell(row, column);
 	int chance = randInt(0, 100);
 	if (chance >= (100 - CLOCK_PRIZE_FREQUENCY))
 	{
-		maze->getCell(row, column)->prize_type = PRIZE_TIME;
+		cell->prize_type = PRIZE_TIME;
 	}
 	else if (chance >= (100 - CLOCK_PRIZE_FREQUENCY - HEALTH_PRIZE_FREQUENCY))
 	{
-		maze->getCell(row, column)->prize_type = PRIZE_HEALTH;
+		cell->prize_type = PRIZE_HEALTH;
 	}
 	else
 	{
-		maze->getCell(row, column)->prize_type = PRIZE_FOOD;
+		cell->prize_type = PRIZE_FOOD;
 	}
-
-	//LOG_LEAVE();
 }
 
 void generateEndPoints(Maze *maze)
