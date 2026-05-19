@@ -34,22 +34,23 @@ public:
 
     void push(T value)
     {
-        _data[_last_index] = value;
-        _last_index++;
         if (_last_index >= _size)
         {
-            _last_index = 0;
+            // Stack is full; this is a programming error.
+            return;
         }
+        _data[_last_index] = value;
+        _last_index++;
     }
 
     T pop()
     {
-        T value = _data[_last_index - 1];
-        _last_index--;
-        if (_last_index < 0)
+        if (_last_index <= 0)
         {
-            _last_index = _size;
+            // Stack is empty; this is a programming error.
+            return T{};
         }
-        return value;
+        _last_index--;
+        return _data[_last_index];
     }
 };
