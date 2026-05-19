@@ -2,6 +2,8 @@
 
 A retro maze game with CGA-style graphics built with SDL2. Navigate a procedurally generated 36×36 maze from **S** to **F** before your time runs out, collecting items and dodging whirligigs along the way.
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/treytomes)
+
 ## Building
 
 **Dependencies:** SDL2 (`sudo apt install libsdl2-dev` on Ubuntu/Debian)
