@@ -24,7 +24,7 @@ namespace SYSTEM
 	const int MEM_ASCII = 0xFFA6E;
 
 	// Starts up SDL and creates window
-	bool initialize(bool fullscreen);
+	bool initialize(bool fullscreen, const char* title = "mazer");
 
 	// Frees media and shuts down SDL
 	void close();

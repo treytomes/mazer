@@ -1099,7 +1099,7 @@ int main(int argc, char *argv[])
 	CGA::GraphicsMode *mode;
 
 	// Initialize SDL
-	if (!SYSTEM::initialize(false))
+	if (!SYSTEM::initialize(false, WINDOW_TITLE))
 	{
 		printf("Failed to initialize!\n");
 		SYSTEM::close();

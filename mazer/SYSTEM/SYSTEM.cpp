@@ -29,7 +29,7 @@ int getScreenScale()
 	return scale;
 }
 
-bool SYSTEM::initialize(bool fullscreen)
+bool SYSTEM::initialize(bool fullscreen, const char* title)
 {
 	// Initialize SDL
 	if (SDL_Init(SDL_INIT_VIDEO) < 0)
@@ -44,7 +44,7 @@ bool SYSTEM::initialize(bool fullscreen)
 
 	// Create window
 	int windowFlags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
-	window = SDL_CreateWindow("DOSSIM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, windowFlags);
+	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, windowFlags);
 	if (window == NULL)
 	{
 		printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
