@@ -55,7 +55,7 @@ struct MazeCell
 
 	bool isDeadEnd()
 	{
-		return north_open ^ south_open ^ west_open ^ east_open;
+		return numOpenings() == 1;
 	}
 };
 
