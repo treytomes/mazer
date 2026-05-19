@@ -23,10 +23,10 @@ namespace UI
     static const float VOL_STEP  = 0.05f;
     static const int   BAR_WIDTH = 20; // characters
 
-    SettingsScreen::SettingsScreen(int sw, int sh, Settings& settings)
+    SettingsScreen::SettingsScreen(int sw, int sh, Settings& settings, CGA::GraphicsMode* mode)
         : Widget(0, 0),
           _screen_width(sw), _screen_height(sh),
-          _settings(settings),
+          _settings(settings), _mode(mode),
           _selected(0), _rebinding(-1), _saved_flash_ms(0)
     {
     }
@@ -133,6 +133,7 @@ namespace UI
             {
                 *row.toggle = !*row.toggle;
                 SYSTEM::toggleFullscreen();
+                _mode->reinitializeSurface();
                 AUDIO::SfxPlayer::play(AUDIO::Presets::MenuNavigate());
                 KEYBOARD::setScanCode(0);
             }

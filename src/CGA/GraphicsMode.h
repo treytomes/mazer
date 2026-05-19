@@ -44,6 +44,10 @@ namespace CGA
 
 		virtual void initialize();
 
+		// Call after SDL_SetWindowFullscreen to rebuild the converted surface
+		// with the new window pixel format.
+		void reinitializeSurface();
+
 		bool isModeSet();
 		virtual int getScreenWidth() = 0;
 		virtual int getScreenHeight() = 0;

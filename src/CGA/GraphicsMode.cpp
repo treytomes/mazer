@@ -36,6 +36,19 @@ void CGA::GraphicsMode::initialize()
 	_drawingSurface = SDL_CreateRGBSurfaceWithFormatFrom(_graphicsMemory, getScreenWidth(), getScreenHeight(), getBitsPerPixel(), getScreenWidth(), SDL_PIXELFORMAT_INDEX8);
 }
 
+void CGA::GraphicsMode::reinitializeSurface()
+{
+	if (_convertedSurface != NULL)
+	{
+		SDL_FreeSurface(_convertedSurface);
+		_convertedSurface = NULL;
+	}
+	SDL_PixelFormat* format = SYSTEM::screenSurface->format;
+	_convertedSurface = SDL_CreateRGBSurfaceWithFormat(
+		0, getScreenWidth(), getScreenHeight(),
+		format->BitsPerPixel, format->format);
+}
+
 bool CGA::GraphicsMode::isModeSet()
 {
 	return _isModeSet;

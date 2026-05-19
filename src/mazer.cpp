@@ -931,7 +931,10 @@ int main(int argc, char *argv[])
 	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_BGM, g_settings.bgm_volume);
 	AUDIO::AudioSystem::instance().setVolume(AUDIO::CHANNEL_SFX, g_settings.sfx_volume);
 	if (g_settings.fullscreen)
+	{
 		SYSTEM::toggleFullscreen();
+		mode->reinitializeSurface();
+	}
 
 	const int SW = mode->getScreenWidth();
 	const int SH = mode->getScreenHeight();
@@ -995,7 +998,10 @@ int main(int argc, char *argv[])
 				}
 
 				if (KEYBOARD::getScanCode() == SDL_SCANCODE_RETURN && KEYBOARD::isAltPressed())
+				{
 					SYSTEM::toggleFullscreen();
+					mode->reinitializeSurface();
+				}
 
 				main_menu.update(SCREEN_TICKS_PER_FRAME);
 				bgm.update(SCREEN_TICKS_PER_FRAME);
@@ -1049,7 +1055,7 @@ int main(int argc, char *argv[])
 
 			if (main_menu.result() == UI::MainMenuResult::Settings)
 			{
-				UI::SettingsScreen settings_screen(SW, SH, g_settings);
+				UI::SettingsScreen settings_screen(SW, SH, g_settings, mode);
 				while (!settings_screen.wantsClose())
 				{
 					Uint32 frame_start = SDL_GetTicks();
@@ -1168,7 +1174,10 @@ int main(int argc, char *argv[])
 			}
 
 			if (KEYBOARD::getScanCode() == SDLK_RETURN && KEYBOARD::isAltPressed())
+			{
 				SYSTEM::toggleFullscreen();
+				mode->reinitializeSurface();
+			}
 
 			Uint32 dt = SCREEN_TICKS_PER_FRAME;
 			hud.update(dt);
