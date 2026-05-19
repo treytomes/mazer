@@ -917,6 +917,9 @@ int main(int argc, char *argv[])
 				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
 
+		is_paused = false;
+		pause_menu.setVisible(false);
+
 		// ---- Game loop ----
 		while (!is_done && player.is_alive && !finished_maze)
 		{
