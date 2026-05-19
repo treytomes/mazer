@@ -884,10 +884,12 @@ int main(int argc, char *argv[])
 
 	SDL_Event e;
 	bool keep_playing = true;
+	bool show_menu = true;
 
 	while (keep_playing)
 	{
 		// ---- Main menu ----
+		if (show_menu)
 		{
 			UI::MainMenu main_menu(SW, SH);
 			while (!main_menu.wantsClose())
@@ -930,6 +932,7 @@ int main(int argc, char *argv[])
 				break;
 			}
 		}
+		show_menu = true; // reset for next iteration; Y can set it false below
 
 		// ---- Round setup ----
 		bool is_done = false;
@@ -1074,8 +1077,17 @@ int main(int argc, char *argv[])
 				}
 			}
 
-			if (KEYBOARD::getScanCode() == SDLK_RETURN && KEYBOARD::isAltPressed())
+			if (KEYBOARD::getScanCode() == SDL_SCANCODE_RETURN && KEYBOARD::isAltPressed())
 				SYSTEM::toggleFullscreen();
+
+			// Any held key doubles the tally drain speed.
+			{
+				const Uint8* keys = SDL_GetKeyboardState(NULL);
+				bool any_held = false;
+				for (int k = 0; k < SDL_NUM_SCANCODES && !any_held; k++)
+					any_held = keys[k] != 0;
+				score_screen->setSpeedMultiplier(any_held ? 2 : 1);
+			}
 
 			score_screen->update(SCREEN_TICKS_PER_FRAME);
 
@@ -1089,11 +1101,14 @@ int main(int argc, char *argv[])
 				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
 
+		// Y = play again (skip menu, start next round); N = return to main menu.
 		bool play_again = !is_done && score_screen->playAgain();
 		delete score_screen;
 
-		if (!play_again)
+		if (is_done)
 			keep_playing = false;
+		else
+			show_menu = !play_again; // Y skips the menu next iteration
 
 		if (finished_maze)
 			maze_seed++;

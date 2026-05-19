@@ -18,9 +18,15 @@ namespace UI
           _finish_bonus(finished_maze ? FINISH_BONUS : 0),
           _final_score(0), _consume_speed_ms(300), _consume_timer(0),
           _tally_done(false), _play_again(false),
+          _speed_multiplier(1),
           _blink_timer(0), _blink_visible(false),
           _screen_width(screen_width), _screen_height(screen_height)
     {
+    }
+
+    void ScoreScreen::setSpeedMultiplier(int multiplier)
+    {
+        _speed_multiplier = multiplier;
     }
 
     bool ScoreScreen::playAgain() const
@@ -54,7 +60,7 @@ namespace UI
             return;
         }
 
-        _consume_timer += dt;
+        _consume_timer += dt * _speed_multiplier;
         if (_consume_timer < (Uint32)_consume_speed_ms)
             return;
         _consume_timer -= _consume_speed_ms;

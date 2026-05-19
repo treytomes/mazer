@@ -20,6 +20,8 @@ namespace UI
         bool _tally_done;
         bool _play_again;
 
+        int _speed_multiplier; // Applied to dt during tally; 1 = normal, 2 = fast
+
         // Blink state for "PLAY AGAIN?" prompt.
         Uint32 _blink_timer;
         bool _blink_visible;
@@ -35,6 +37,9 @@ namespace UI
         ScoreScreen(int screen_width, int screen_height,
                     int health, int time_remaining, int score,
                     bool finished_maze);
+
+        // 1 = normal speed, 2 = double speed. Set each frame from the game loop.
+        void setSpeedMultiplier(int multiplier);
 
         // Valid after wantsClose() returns true.
         bool playAgain() const;
