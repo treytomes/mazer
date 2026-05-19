@@ -14,12 +14,13 @@ add_executable(mazer
 	"mazer/CGA/GraphicsMode.cpp"
 	"mazer/CGA/TextMode.cpp"
 	"mazer/SYSTEM/SYSTEM.cpp"
-	#"mazer/SYSTEM/Timer.cpp"
+	"mazer/SYSTEM/Timer.cpp"
 	"mazer/maze.cpp"
 	"mazer/mazer.cpp"
 	"mazer/moremath.cpp"
 	"mazer/OEM437.cpp"
- "mazer/SYSTEM/Timer.h" "mazer/SYSTEM/Timer.cpp" "mazer/bitIcons.h")
+	"mazer/UI/Widget.cpp"
+	"mazer/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)
 target_include_directories(mazer PRIVATE ${SDL2_INCLUDE_DIRS})
