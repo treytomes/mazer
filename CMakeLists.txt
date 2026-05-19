@@ -35,6 +35,11 @@ add_executable(mazer
 	"src/UI/ScoreScreen.cpp"
 	"src/UI/CurtainTransition.cpp"
 	"src/UI/MainMenu.cpp"
+	"src/UI/SfxEditor.cpp"
+	"src/AUDIO/SfxParams.cpp"
+	"src/AUDIO/SfxGenerator.cpp"
+	"src/AUDIO/AudioSystem.cpp"
+	"src/AUDIO/SfxPlayer.cpp"
 	"src/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)

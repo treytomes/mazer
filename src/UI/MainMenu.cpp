@@ -1,12 +1,14 @@
 #include "MainMenu.h"
 #include "../KEYBOARD.h"
+#include "../AUDIO/SfxPlayer.h"
+#include "../AUDIO/SfxParams.h"
 #include <stdio.h>
 #include <string.h>
 
 namespace UI
 {
-    static const int   NUM_ITEMS      = 2;
-    static const char* ITEM_LABELS[NUM_ITEMS] = { "Play", "Quit" };
+    static const int   NUM_ITEMS      = 3;
+    static const char* ITEM_LABELS[NUM_ITEMS] = { "Play", "SFX", "Quit" };
     static const int   BLINK_SPEED_MS = 400;
     static const int   CHAR_W         = 8;
     static const int   CHAR_H         = 8;
@@ -15,7 +17,8 @@ namespace UI
         : Widget(0, 0),
           _screen_width(screen_width), _screen_height(screen_height),
           _selected(0), _result(MainMenuResult::None),
-          _blink_timer(0), _blink_visible(true)
+          _blink_timer(0), _blink_visible(true),
+          _exit_delay_ms(0)
     {
     }
 
@@ -26,6 +29,14 @@ namespace UI
 
     void MainMenu::updateSelf(Uint32 dt)
     {
+        if (_exit_delay_ms > 0)
+        {
+            _exit_delay_ms -= (int)dt;
+            if (_exit_delay_ms <= 0)
+                close();
+            return;
+        }
+
         _blink_timer += dt;
         if (_blink_timer >= (Uint32)BLINK_SPEED_MS)
         {
@@ -37,16 +48,29 @@ namespace UI
         if (key == SDL_SCANCODE_UP)
         {
             _selected = (_selected - 1 + NUM_ITEMS) % NUM_ITEMS;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::MenuNavigate());
             KEYBOARD::setScanCode(0);
         }
         else if (key == SDL_SCANCODE_DOWN)
         {
             _selected = (_selected + 1) % NUM_ITEMS;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::MenuNavigate());
             KEYBOARD::setScanCode(0);
         }
         else if (key == SDL_SCANCODE_RETURN || key == SDL_SCANCODE_KP_ENTER)
         {
-            _result = (_selected == 0) ? MainMenuResult::Play : MainMenuResult::Quit;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::MenuSelect());
+            if (_selected == 0)
+                _result = MainMenuResult::Play;
+            else if (_selected == 1)
+                _result = MainMenuResult::SFX;
+            else
+            {
+                AUDIO::SfxPlayer::play(AUDIO::Presets::PowerDown());
+                _result = MainMenuResult::Quit;
+                _exit_delay_ms = 950; // let the power-down sound finish
+                return;
+            }
             close();
         }
     }
@@ -72,10 +96,8 @@ namespace UI
             int item_y = cy - CHAR_H + i * (CHAR_H + 4);
             bool is_selected = (i == _selected);
 
-            // Colour: bright white when selected, dark grey when not.
             Uint8 color = is_selected ? 0xF0 : 0x80;
 
-            // Blinking cursor marker to the left of the selected item.
             if (is_selected && _blink_visible)
             {
                 int marker_x = cx - (int)strlen(label) * CHAR_W / 2 - CHAR_W * 2;

@@ -29,6 +29,8 @@ set(MAZER_TESTABLE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/UI/CurtainTransition.cpp
     ${CMAKE_SOURCE_DIR}/src/UI/ScoreScreen.cpp
     ${CMAKE_SOURCE_DIR}/src/UI/MainMenu.cpp
+    ${CMAKE_SOURCE_DIR}/src/AUDIO/SfxParams.cpp
+    ${CMAKE_SOURCE_DIR}/src/AUDIO/SfxGenerator.cpp
 )
 
 add_executable(mazer_tests
@@ -39,6 +41,8 @@ add_executable(mazer_tests
     test_label.cpp
     test_score_screen.cpp
     test_curtain.cpp
+    test_sfxgenerator.cpp
+    AudioStub.cpp
     ${MAZER_TESTABLE_SOURCES}
 )
 

@@ -4,7 +4,7 @@
 
 namespace UI
 {
-    enum class MainMenuResult { None, Play, Quit };
+    enum class MainMenuResult { None, Play, SFX, Quit };
 
     class MainMenu : public Widget
     {
@@ -16,6 +16,8 @@ namespace UI
 
         Uint32 _blink_timer;
         bool   _blink_visible;
+
+        int    _exit_delay_ms;  // > 0 while waiting before close() after Quit
 
     protected:
         void drawSelf(CGA::GraphicsMode* mode, int abs_x, int abs_y) override;

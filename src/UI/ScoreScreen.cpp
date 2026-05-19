@@ -1,5 +1,7 @@
 #include "ScoreScreen.h"
 #include "../KEYBOARD.h"
+#include "../AUDIO/SfxPlayer.h"
+#include "../AUDIO/SfxParams.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -69,28 +71,33 @@ namespace UI
         {
             _health--;
             _final_score += HEALTH_SCORE;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::ScoreTick());
         }
         else if (_time > 0)
         {
             _time--;
             _final_score += TIME_SCORE;
             _consume_speed_ms = 80;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::ScoreTick());
         }
         else if (_score > 0)
         {
             _score--;
             _final_score++;
             _consume_speed_ms = 8;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::ScoreTick());
         }
         else if (_finish_bonus > 0)
         {
             _finish_bonus--;
             _final_score++;
             _consume_speed_ms = 4;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::ScoreTick());
         }
         else
         {
             _tally_done = true;
+            AUDIO::SfxPlayer::play(AUDIO::Presets::ScoreFinish());
         }
     }
 

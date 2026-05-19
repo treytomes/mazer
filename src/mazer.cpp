@@ -23,6 +23,10 @@ and last for 10 seconds.
 #include "UI/PauseMenu.h"
 #include "UI/ScoreScreen.h"
 #include "UI/CurtainTransition.h"
+#include "UI/SfxEditor.h"
+#include "AUDIO/AudioSystem.h"
+#include "AUDIO/SfxPlayer.h"
+#include "AUDIO/SfxParams.h"
 
 // TODO: Time should be worth more than pellets at the final scoring.
 // TODO: Whirligigs should be slower and smarter.  Make them follow a wall, or stay within 15 spaces of an area.
@@ -490,19 +494,23 @@ void updatePlayer()
 				case PRIZE_FOOD:
 					player.score += 1;
 					cell->prize_type = PRIZE_NONE;
+					AUDIO::SfxPlayer::play(AUDIO::Presets::PickupFood());
 					break;
 				case PRIZE_TIME:
 					seconds += CLOCK_PRIZE_VALUE;
 					player.score += CLOCK_PRIZE_SCORE;
 					cell->prize_type = PRIZE_NONE;
+					AUDIO::SfxPlayer::play(AUDIO::Presets::PickupClock());
 					break;
 				case PRIZE_HEALTH:
 					player.health += HEALTH_PRIZE_VALUE;
 					player.score += HEALTH_PRIZE_SCORE;
 					cell->prize_type = PRIZE_NONE;
+					AUDIO::SfxPlayer::play(AUDIO::Presets::PickupHealth());
 					break;
 				case PRIZE_FINISH:
 					finished_maze = true;
+					AUDIO::SfxPlayer::play(AUDIO::Presets::MazeFinish());
 					break;
 			}
 		}
@@ -529,6 +537,7 @@ void updatePlayer()
 			player.health--;
 			w->is_alive = false;
 			flash_end_time = SDL_GetTicks() + FLASH_LENGTH_MS;
+			AUDIO::SfxPlayer::play(AUDIO::Presets::WhirligigHit());
 			break;
 		}
 	}
@@ -873,6 +882,8 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	AUDIO::AudioSystem::instance().initialize();
+
 	const int SW = mode->getScreenWidth();
 	const int SH = mode->getScreenHeight();
 
@@ -930,6 +941,38 @@ int main(int argc, char *argv[])
 			{
 				keep_playing = false;
 				break;
+			}
+
+			if (main_menu.result() == UI::MainMenuResult::SFX)
+			{
+				UI::SfxEditor sfx_editor(SW, SH);
+				while (!sfx_editor.wantsClose())
+				{
+					Uint32 frame_start = SDL_GetTicks();
+
+					KEYBOARD::setScanCode(0);
+					while (SDL_PollEvent(&e) != 0)
+					{
+						KEYBOARD::respondToEvent(e);
+						if (e.type == SDL_QUIT)
+						{
+							sfx_editor.close();
+							keep_playing = false;
+						}
+					}
+
+					sfx_editor.update(SCREEN_TICKS_PER_FRAME);
+
+					mode->clearGraphicsScreen(0);
+					sfx_editor.draw(mode);
+					mode->render();
+
+					Uint32 elapsed = SDL_GetTicks() - frame_start;
+					if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+						SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
+				}
+				// Return to menu after SFX editor closes.
+				continue;
 			}
 		}
 		show_menu = true; // reset for next iteration; Y can set it false below
@@ -1119,6 +1162,7 @@ int main(int argc, char *argv[])
 	}
 
 	delete mode;
+	AUDIO::AudioSystem::instance().shutdown();
 	SYSTEM::close();
 	return 0;
 }
