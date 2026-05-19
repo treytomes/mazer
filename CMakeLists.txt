@@ -40,6 +40,8 @@ add_executable(mazer
 	"src/AUDIO/SfxGenerator.cpp"
 	"src/AUDIO/AudioSystem.cpp"
 	"src/AUDIO/SfxPlayer.cpp"
+	"src/AUDIO/BgmParams.cpp"
+	"src/AUDIO/BgmPlayer.cpp"
 	"src/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)

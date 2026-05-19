@@ -27,6 +27,8 @@ and last for 10 seconds.
 #include "AUDIO/AudioSystem.h"
 #include "AUDIO/SfxPlayer.h"
 #include "AUDIO/SfxParams.h"
+#include "AUDIO/BgmPlayer.h"
+#include "AUDIO/BgmParams.h"
 
 // TODO: Time should be worth more than pellets at the final scoring.
 // TODO: Whirligigs should be slower and smarter.  Make them follow a wall, or stay within 15 spaces of an area.
@@ -896,12 +898,14 @@ int main(int argc, char *argv[])
 	SDL_Event e;
 	bool keep_playing = true;
 	bool show_menu = true;
+	AUDIO::BgmPlayer bgm;
 
 	while (keep_playing)
 	{
 		// ---- Main menu ----
 		if (show_menu)
 		{
+			bgm.setParams(AUDIO::BgmThemes::Menu());
 			UI::MainMenu main_menu(SW, SH);
 			while (!main_menu.wantsClose())
 			{
@@ -927,6 +931,7 @@ int main(int argc, char *argv[])
 					SYSTEM::toggleFullscreen();
 
 				main_menu.update(SCREEN_TICKS_PER_FRAME);
+				bgm.update(SCREEN_TICKS_PER_FRAME);
 
 				mode->clearGraphicsScreen(0);
 				main_menu.draw(mode);
@@ -993,6 +998,8 @@ int main(int argc, char *argv[])
 
 		for (int n = 0; n < MAX_BLOCKS;     n++) blocks[n].is_alive     = false;
 		for (int n = 0; n < MAX_WHIRLIGIGS; n++) whirligigs[n].is_alive = false;
+
+		bgm.setParams(AUDIO::BgmThemes::Game());
 
 		// ---- Open curtain ----
 		curtain.open();
@@ -1074,7 +1081,17 @@ int main(int argc, char *argv[])
 				updateWhirligigs();
 				updateBlocks();
 				updateTime();
+
+				// Switch to tense theme when health is 1 or time is under 30s.
+				bool tense = (player.health <= 1 || seconds <= 30);
+				static bool was_tense = false;
+				if (tense && !was_tense)
+					bgm.setParams(AUDIO::BgmThemes::Tense());
+				else if (!tense && was_tense)
+					bgm.setParams(AUDIO::BgmThemes::Game());
+				was_tense = tense;
 			}
+			bgm.update(dt);
 
 			drawEverything(mode, &hud, &pause_menu);
 			mode->render();
@@ -1100,6 +1117,8 @@ int main(int argc, char *argv[])
 
 		delete maze;
 		maze = nullptr;
+
+		bgm.stop();
 
 		// ---- Score screen ----
 		// Reset is_done so Escape-to-exit-game doesn't prevent N from returning
