@@ -13,21 +13,21 @@ FetchContent_MakeAvailable(Catch2)
 # GraphicsMode.cpp is included because it only calls SDL at initialize()/render();
 # we never call those in tests — the mock overrides the virtual interface.
 set(MAZER_TESTABLE_SOURCES
-    ${CMAKE_SOURCE_DIR}/mazer/CGA/GraphicsMode.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/maze.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/moremath.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/OEM437.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/SYSTEM/SYSTEM.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/Widget.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/Label.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/BorderedBox.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/HeartMeter.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/TimerDisplay.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/BlockCounter.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/HUD.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/PauseMenu.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/CurtainTransition.cpp
-    ${CMAKE_SOURCE_DIR}/mazer/UI/ScoreScreen.cpp
+    ${CMAKE_SOURCE_DIR}/src/CGA/GraphicsMode.cpp
+    ${CMAKE_SOURCE_DIR}/src/maze.cpp
+    ${CMAKE_SOURCE_DIR}/src/moremath.cpp
+    ${CMAKE_SOURCE_DIR}/src/OEM437.cpp
+    ${CMAKE_SOURCE_DIR}/src/SYSTEM/SYSTEM.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/Widget.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/Label.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/BorderedBox.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/HeartMeter.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/TimerDisplay.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/BlockCounter.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/HUD.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/PauseMenu.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/CurtainTransition.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/ScoreScreen.cpp
 )
 
 add_executable(mazer_tests
@@ -42,7 +42,7 @@ add_executable(mazer_tests
 )
 
 target_include_directories(mazer_tests PRIVATE
-    ${CMAKE_SOURCE_DIR}/mazer
+    ${CMAKE_SOURCE_DIR}/src
     ${SDL2_INCLUDE_DIRS}
 )
 target_link_libraries(mazer_tests PRIVATE Catch2::Catch2WithMain SDL2::SDL2)

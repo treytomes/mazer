@@ -1,6 +1,6 @@
 # Build output
 build/
-mazer/mazer
+src/mazer
 
 # CMake generated
 CMakeCache.txt

@@ -8,9 +8,9 @@ Mazer is a C++ maze game built with SDL2. The player navigates procedurally gene
 
 ## Build
 
-**Linux (from `mazer/` directory):**
+**Linux (from `src/` directory):**
 ```sh
-cd mazer
+cd src
 make
 ./mazer
 ```
@@ -23,11 +23,11 @@ cmake --build build
 
 CMake requires SDL2. On Linux: `sudo apt install libsdl2-dev`. On Windows, SDL2 paths are configured in `CMakeSettings.json` for Visual Studio.
 
-There are no automated tests or linting tools.
+Tests live in `tests/`. Build and run with `cmake --build build --target mazer_tests && ./build/tests/mazer_tests`. There are no linting tools.
 
 ## Architecture
 
-Source lives in `mazer/`. Key modules:
+Source lives in `src/`. Key modules:
 
 **`SYSTEM/`** — SDL2 initialization and lifecycle. `SYSTEM.cpp` sets up the window, renderer, and a simulated 16MB memory block. `Timer.cpp` handles frame rate timing.
 

@@ -16,25 +16,25 @@ enable_testing()
 add_subdirectory(tests)
 
 add_executable(mazer
-	"mazer/CGA/GraphicsMode.cpp"
-	"mazer/CGA/TextMode.cpp"
-	"mazer/SYSTEM/SYSTEM.cpp"
-	"mazer/SYSTEM/Timer.cpp"
-	"mazer/maze.cpp"
-	"mazer/mazer.cpp"
-	"mazer/moremath.cpp"
-	"mazer/OEM437.cpp"
-	"mazer/UI/Widget.cpp"
-	"mazer/UI/Label.cpp"
-	"mazer/UI/BorderedBox.cpp"
-	"mazer/UI/HeartMeter.cpp"
-	"mazer/UI/TimerDisplay.cpp"
-	"mazer/UI/BlockCounter.cpp"
-	"mazer/UI/HUD.cpp"
-	"mazer/UI/PauseMenu.cpp"
-	"mazer/UI/ScoreScreen.cpp"
-	"mazer/UI/CurtainTransition.cpp"
-	"mazer/bitIcons.h")
+	"src/CGA/GraphicsMode.cpp"
+	"src/CGA/TextMode.cpp"
+	"src/SYSTEM/SYSTEM.cpp"
+	"src/SYSTEM/Timer.cpp"
+	"src/maze.cpp"
+	"src/mazer.cpp"
+	"src/moremath.cpp"
+	"src/OEM437.cpp"
+	"src/UI/Widget.cpp"
+	"src/UI/Label.cpp"
+	"src/UI/BorderedBox.cpp"
+	"src/UI/HeartMeter.cpp"
+	"src/UI/TimerDisplay.cpp"
+	"src/UI/BlockCounter.cpp"
+	"src/UI/HUD.cpp"
+	"src/UI/PauseMenu.cpp"
+	"src/UI/ScoreScreen.cpp"
+	"src/UI/CurtainTransition.cpp"
+	"src/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)
 target_include_directories(mazer PRIVATE ${SDL2_INCLUDE_DIRS})
