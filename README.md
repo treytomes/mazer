@@ -2,6 +2,7 @@
 
 A retro maze game with CGA-style graphics built with SDL2. Navigate a procedurally generated 36×36 maze from **S** to **F** before your time runs out, collecting items and dodging whirligigs along the way.
 
+[![CI](https://github.com/treytomes/mazer/actions/workflows/ci.yml/badge.svg)](https://github.com/treytomes/mazer/actions/workflows/ci.yml)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/treytomes)
 
 ## Building
