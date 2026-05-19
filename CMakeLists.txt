@@ -9,7 +9,6 @@ project ("mazer")
 #add_subdirectory ("mazer")
 
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIRS})
 
 add_executable(mazer
 	"mazer/CGA/GraphicsMode.cpp"
@@ -22,7 +21,8 @@ add_executable(mazer
 	"mazer/OEM437.cpp"
  "mazer/SYSTEM/Timer.h" "mazer/SYSTEM/Timer.cpp" "mazer/bitIcons.h")
 
-target_link_libraries(mazer ${SDL2_LIBRARIES})
+target_link_libraries(mazer SDL2::SDL2)
+target_include_directories(mazer PRIVATE ${SDL2_INCLUDE_DIRS})
 
 if(WIN32)
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8)

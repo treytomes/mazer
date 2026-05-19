@@ -9,7 +9,7 @@
 
 // Using SDL and standard IO
 #include <SDL.h>
-#include <SDL_Timer.h>
+#include <SDL_timer.h>
 #include <stdio.h>
 #include "OEM437.h"
 
