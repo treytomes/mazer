@@ -7,6 +7,6 @@ namespace AUDIO
     void SfxPlayer::play(const SfxParams& p, int sample_rate)
     {
         auto samples = SfxGenerator::generate(p, sample_rate);
-        AudioSystem::instance().play(std::move(samples));
+        AudioSystem::instance().play(std::move(samples), CHANNEL_SFX);
     }
 }

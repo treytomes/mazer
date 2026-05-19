@@ -14,6 +14,8 @@ namespace AUDIO
     {
         for (int i = 0; i < MAX_VOICES; i++)
             _voices[i].active = false;
+        _volume[CHANNEL_SFX] = 0.5f;
+        _volume[CHANNEL_BGM] = 0.25f;
     }
 
     AudioSystem::~AudioSystem()
@@ -57,7 +59,21 @@ namespace AUDIO
         }
     }
 
-    void AudioSystem::play(std::vector<float>&& samples)
+    void AudioSystem::setVolume(AudioChannel ch, float volume)
+    {
+        if (volume < 0.0f) volume = 0.0f;
+        if (volume > 1.0f) volume = 1.0f;
+        SDL_LockMutex(_mutex);
+        _volume[ch] = volume;
+        SDL_UnlockMutex(_mutex);
+    }
+
+    float AudioSystem::getVolume(AudioChannel ch) const
+    {
+        return _volume[ch];
+    }
+
+    void AudioSystem::play(std::vector<float>&& samples, AudioChannel channel)
     {
         if (!_mutex || _device == 0) return;
 
@@ -79,6 +95,7 @@ namespace AUDIO
         _voices[slot].samples  = std::move(samples);
         _voices[slot].position = 0;
         _voices[slot].active   = true;
+        _voices[slot].channel  = channel;
 
         SDL_UnlockMutex(_mutex);
     }
@@ -101,13 +118,13 @@ namespace AUDIO
             Voice& v = _voices[i];
             if (!v.active) continue;
 
+            float vol     = _volume[v.channel];
             int remaining = (int)v.samples.size() - v.position;
             int to_mix    = (remaining < frame_count) ? remaining : frame_count;
 
             for (int s = 0; s < to_mix; s++)
             {
-                buf[s] += v.samples[v.position + s];
-                // Soft-clip accumulation
+                buf[s] += v.samples[v.position + s] * vol;
                 if (buf[s] >  1.0f) buf[s] =  1.0f;
                 if (buf[s] < -1.0f) buf[s] = -1.0f;
             }

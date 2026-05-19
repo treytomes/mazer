@@ -147,7 +147,7 @@ namespace AUDIO
         SfxParams sp = makeNote(midi, note_dur_s,
                                 _params.melody_wave, _params.melody_volume);
         auto samples = SfxGenerator::generate(sp, 44100);
-        AudioSystem::instance().play(std::move(samples));
+        AudioSystem::instance().play(std::move(samples), CHANNEL_BGM);
     }
 
     void BgmPlayer::fireBassNote(int chord_root_midi)
@@ -161,7 +161,7 @@ namespace AUDIO
         SfxParams sp = makeNote(midi, note_dur_s,
                                 _params.bass_wave, _params.bass_volume);
         auto samples = SfxGenerator::generate(sp, 44100);
-        AudioSystem::instance().play(std::move(samples));
+        AudioSystem::instance().play(std::move(samples), CHANNEL_BGM);
     }
 
     void BgmPlayer::update(Uint32 dt)

@@ -5,14 +5,17 @@
 
 namespace AUDIO
 {
+    enum AudioChannel { CHANNEL_SFX = 0, CHANNEL_BGM, CHANNEL_COUNT };
+
     // Maximum simultaneously-playing voices.
     static const int MAX_VOICES = 16;
 
     struct Voice
     {
         std::vector<float> samples;
-        int position;
-        bool active;
+        int          position;
+        bool         active;
+        AudioChannel channel;
     };
 
     class AudioSystem
@@ -23,8 +26,12 @@ namespace AUDIO
         bool initialize();
         void shutdown();
 
+        // Per-channel volume scalars (0.0–1.0). Safe to call from any thread.
+        void  setVolume(AudioChannel ch, float volume);
+        float getVolume(AudioChannel ch) const;
+
         // Push a synthesized clip to the mixer. Thread-safe.
-        void play(std::vector<float>&& samples);
+        void play(std::vector<float>&& samples, AudioChannel channel = CHANNEL_SFX);
 
     private:
         AudioSystem();
@@ -40,5 +47,6 @@ namespace AUDIO
         Voice             _voices[MAX_VOICES];
         int               _next_voice;
         int               _sample_rate;
+        float             _volume[CHANNEL_COUNT];
     };
 }
