@@ -19,6 +19,7 @@ and last for 10 seconds.
 #include "stack.h"
 #include "logging.h"
 #include "UI/HUD.h"
+#include "UI/MainMenu.h"
 #include "UI/PauseMenu.h"
 #include "UI/ScoreScreen.h"
 #include "UI/CurtainTransition.h"
@@ -886,6 +887,50 @@ int main(int argc, char *argv[])
 
 	while (keep_playing)
 	{
+		// ---- Main menu ----
+		{
+			UI::MainMenu main_menu(SW, SH);
+			while (!main_menu.wantsClose())
+			{
+				Uint32 frame_start = SDL_GetTicks();
+
+				KEYBOARD::setScanCode(0);
+				while (SDL_PollEvent(&e) != 0)
+				{
+					KEYBOARD::respondToEvent(e);
+					if (e.type == SDL_QUIT)
+					{
+						main_menu.close();
+						keep_playing = false;
+					}
+					else if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE)
+					{
+						main_menu.close();
+						keep_playing = false;
+					}
+				}
+
+				if (KEYBOARD::getScanCode() == SDL_SCANCODE_RETURN && KEYBOARD::isAltPressed())
+					SYSTEM::toggleFullscreen();
+
+				main_menu.update(SCREEN_TICKS_PER_FRAME);
+
+				mode->clearGraphicsScreen(0);
+				main_menu.draw(mode);
+				mode->render();
+
+				Uint32 elapsed = SDL_GetTicks() - frame_start;
+				if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+					SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
+			}
+
+			if (!keep_playing || main_menu.result() == UI::MainMenuResult::Quit)
+			{
+				keep_playing = false;
+				break;
+			}
+		}
+
 		// ---- Round setup ----
 		bool is_done = false;
 		maze = new Maze();
@@ -1044,8 +1089,11 @@ int main(int argc, char *argv[])
 				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
 
-		keep_playing = !is_done && score_screen->playAgain();
+		bool play_again = !is_done && score_screen->playAgain();
 		delete score_screen;
+
+		if (!play_again)
+			keep_playing = false;
 
 		if (finished_maze)
 			maze_seed++;

@@ -28,6 +28,7 @@ set(MAZER_TESTABLE_SOURCES
     ${CMAKE_SOURCE_DIR}/src/UI/PauseMenu.cpp
     ${CMAKE_SOURCE_DIR}/src/UI/CurtainTransition.cpp
     ${CMAKE_SOURCE_DIR}/src/UI/ScoreScreen.cpp
+    ${CMAKE_SOURCE_DIR}/src/UI/MainMenu.cpp
 )
 
 add_executable(mazer_tests

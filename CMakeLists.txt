@@ -34,6 +34,7 @@ add_executable(mazer
 	"src/UI/PauseMenu.cpp"
 	"src/UI/ScoreScreen.cpp"
 	"src/UI/CurtainTransition.cpp"
+	"src/UI/MainMenu.cpp"
 	"src/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)
