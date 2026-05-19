@@ -32,7 +32,7 @@ void CGA::GraphicsMode::initialize()
 	SDL_PixelFormat* format = SYSTEM::screenSurface->format;
 	_convertedSurface = SDL_CreateRGBSurfaceWithFormat(0, getScreenWidth(), getScreenHeight(), format->BitsPerPixel, format->format);
 
-	_graphicsMemory = (uint8_t*)calloc(getScreenWidth() * getScreenWidth(), 1);
+	_graphicsMemory = (uint8_t*)calloc(getScreenWidth() * getScreenHeight(), 1);
 	_drawingSurface = SDL_CreateRGBSurfaceWithFormatFrom(_graphicsMemory, getScreenWidth(), getScreenHeight(), getBitsPerPixel(), getScreenWidth(), SDL_PIXELFORMAT_INDEX8);
 }
 
