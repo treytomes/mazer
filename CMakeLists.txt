@@ -20,6 +20,15 @@ add_executable(mazer
 	"mazer/moremath.cpp"
 	"mazer/OEM437.cpp"
 	"mazer/UI/Widget.cpp"
+	"mazer/UI/Label.cpp"
+	"mazer/UI/BorderedBox.cpp"
+	"mazer/UI/HeartMeter.cpp"
+	"mazer/UI/TimerDisplay.cpp"
+	"mazer/UI/BlockCounter.cpp"
+	"mazer/UI/HUD.cpp"
+	"mazer/UI/PauseMenu.cpp"
+	"mazer/UI/ScoreScreen.cpp"
+	"mazer/UI/CurtainTransition.cpp"
 	"mazer/bitIcons.h")
 
 target_link_libraries(mazer SDL2::SDL2)

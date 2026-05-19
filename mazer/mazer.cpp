@@ -18,6 +18,10 @@ and last for 10 seconds.
 #include "maze.h"
 #include "stack.h"
 #include "logging.h"
+#include "UI/HUD.h"
+#include "UI/PauseMenu.h"
+#include "UI/ScoreScreen.h"
+#include "UI/CurtainTransition.h"
 
 // TODO: Time should be worth more than pellets at the final scoring.
 // TODO: Whirligigs should be slower and smarter.  Make them follow a wall, or stay within 15 spaces of an area.
@@ -35,7 +39,6 @@ int maze_seed = 1;
 const int TARGET_FPS = 60;
 const int SCREEN_TICKS_PER_FRAME = 1000 / TARGET_FPS;
 const char WINDOW_TITLE[] = "mazer";
-Uint32 num_frames = 0;
 
 #include "bitIcons.h"
 
@@ -163,56 +166,6 @@ int flash_end_time = 0;
  * End of variables.
  */
 
-void drawHUD(CGA::GraphicsMode *mode)
-{
-	char buffer[50];
-
-	// The HUD takes up the top 8 pixels of the screen.
-	mode->drawFilledRect(0, mode->getScreenWidth() - 1, 0, 7, 0);
-
-	// Calculate and render FPS in a single go.
-	num_frames++;
-	Uint32 time_secs = (SDL_GetTicks() / 1000);
-	if (time_secs > 0)
-	{
-		sprintf(buffer, "%s, FPS: %d", WINDOW_TITLE, num_frames / time_secs);
-		SDL_SetWindowTitle(SYSTEM::window, buffer);
-	}
-
-	int x = mode->getScreenWidth();
-
-	// Time
-	sprintf(buffer, "TIME:%03d", seconds);
-	x -= (strlen(buffer) * 8);
-	mode->drawString(x, 0, (seconds <= 10) ? 0xF4 : 0xE0, buffer);
-
-	// Blocks
-	sprintf(buffer, "x%01d", remaining_blocks);
-	x -= (strlen(buffer) * 8 + 8);
-	mode->drawString(x, 0, 0xE0, buffer);
-
-	x -= 1 * 8;
-	mode->drawChar(x, 0, 0x60, 254); // small block tile
-
-	// Score
-	sprintf(buffer, "%05d", player.score);
-	x -= (strlen(buffer) * 8 + 8);
-	mode->drawString(x, 0, 0xE0, buffer);
-
-	// Health
-	if ((player.health <= 0) || (seconds <= 0))
-	{
-		// TODO: Did player health go from 2 to game over?
-		mode->drawString(0, 0, randInt(1, 16), "GAME OVER!");
-	}
-	else
-	{
-		for (unsigned char n = 0; n < player.health; n++)
-		{
-			mode->drawChar(n * 8, 0, 0x40, 3);
-		}
-	}
-}
 
 void updateTime()
 {
@@ -861,47 +814,8 @@ void drawSolution(CGA::GraphicsMode *mode)
 	}
 }
 
-int pause_last_blink_time = 0;
-bool pause_show_text = false;
-void drawPauseWindow(CGA::GraphicsMode *mode)
-{
-	const int BLINK_SPEED = 500;
-	const int CENTER_X = mode->getScreenWidth() >> 1;
-	const int CENTER_Y = mode->getScreenHeight() >> 1;
 
-	int left = mode->getScreenWidth() * 0.3;
-	int right = mode->getScreenWidth() * 0.7;
-	int top = mode->getScreenHeight() * 0.3;
-	int bottom = mode->getScreenHeight() * 0.7;
-	mode->drawFilledRect(left, right, top, bottom, 0);
-
-	mode->drawHLine(left, right, top, 9);
-	mode->drawHLine(left, right, top + 2, 9);
-
-	mode->drawHLine(left, right, bottom, 9);
-	mode->drawHLine(left, right, bottom - 2, 9);
-
-	mode->drawVLine(left, top, bottom, 9);
-	mode->drawVLine(left + 2, top, bottom, 9);
-
-	mode->drawVLine(right, top, bottom, 9);
-	mode->drawVLine(right - 2, top, bottom, 9);
-
-	mode->drawString(CENTER_X - 4 * 7, CENTER_Y - 4, 0xF0, "PAUSED!");
-
-	if (SDL_GetTicks() - pause_last_blink_time >= BLINK_SPEED)
-	{
-		pause_last_blink_time = SDL_GetTicks();
-		pause_show_text = !pause_show_text;
-	}
-
-	if (pause_show_text)
-	{
-		mode->drawString(CENTER_X - 4 * 11, CENTER_Y - 4 + 8 * 4, 0xF0, "PRESS <TAB>");
-	}
-}
-
-void drawEverything(CGA::GraphicsMode *mode)
+void drawEverything(CGA::GraphicsMode *mode, UI::HUD *hud, UI::PauseMenu *pause_menu)
 {
 	if (SDL_GetTicks() < flash_end_time)
 	{
@@ -934,171 +848,14 @@ void drawEverything(CGA::GraphicsMode *mode)
 	drawWhirligigs(mode);
 	drawBlocks(mode);
 
-	drawHUD(mode);
-
-	if (is_paused)
-	{
-		drawPauseWindow(mode);
-	}
-}
-
-// Render the opening effect.
-void openCurtainFx(CGA::GraphicsMode *mode)
-{
-	for (int x = mode->getScreenWidth() / 2; x >= 0; x--)
-	{
-		drawEverything(mode);
-
-		mode->drawFilledRect(0, x, 8, mode->getScreenHeight(), 0);
-		mode->drawFilledRect(mode->getScreenWidth() - x, mode->getScreenWidth(), 0, mode->getScreenHeight(), 0);
-		
-		mode->render();
-	}
-}
-
-// Render the closing effect.
-void closeCurtainFx(CGA::GraphicsMode *mode)
-{
-	for (int x = 0; x < mode->getScreenWidth() / 2; x++)
-	{
-		drawEverything(mode);
-
-		mode->drawFilledRect(0, x, 8, mode->getScreenHeight(), 0);
-		mode->drawFilledRect(mode->getScreenWidth() - x, mode->getScreenWidth(), 0, mode->getScreenHeight(), 0);
-		
-		mode->render();
-	}
-}
-
-// Calculate the player's final score.  Returns true to play again.
-bool finalScoreScreen(CGA::GraphicsMode *mode)
-{
-	int CONSUME_SCORE_SPEED = 300;
-	const int BLINK_SPEED = 500;
-
-	SDL_Event e;
-	char buffer[32];
-	int center_x = mode->getScreenWidth() >> 1;
-	int center_y = mode->getScreenHeight() >> 1;
-	int player_health = player.health;
-	int player_score = player.score;
-	int player_time = seconds;
-	int finish_bonus = finished_maze ? 1000 : 0;
-	int final_score = 0;
-	bool show_text = false;
-	bool score_is_consumed = false;
-	int last_consume_score = 0;
-	int last_blink_time = 0;
-
-	while (true)
-	{
-		while (SDL_PollEvent(&e) != 0)
-		{
-			KEYBOARD::respondToEvent(e);
-			switch (e.type)
-			{
-			case SDL_QUIT:
-				return false;
-			case SDL_KEYDOWN:
-				switch (e.key.keysym.sym)
-				{
-				case SDLK_y:
-					return true;
-				case SDLK_n:
-					return false;
-				}
-				break;
-			}
-		}
-
-		Uint8 keysym = KEYBOARD::getScanCode();
-		if (keysym == SDLK_RETURN)
-		{
-			if (KEYBOARD::isAltPressed())
-			{
-				SYSTEM::toggleFullscreen();
-			}
-		}
-
-		mode->clearGraphicsScreen(0);
-
-		drawHUD(mode);
-
-		if (SDL_GetTicks() - last_consume_score >= CONSUME_SCORE_SPEED)
-		{
-			last_consume_score = SDL_GetTicks();
-
-			if (player_health > 0)
-			{
-				player_health--;
-				//player.health--;
-				final_score += HEALTH_PRIZE_SCORE;
-			}
-			else if (player_time > 0)
-			{
-				player_time--;
-				//seconds--;
-				final_score += TIME_VALUE;
-				CONSUME_SCORE_SPEED = 80;
-			}
-			else if (player_score > 0)
-			{
-				player_score--;
-				//player.score--;
-				final_score += 1;
-				CONSUME_SCORE_SPEED = 8;
-			}
-			else if (finish_bonus > 0)
-			{
-				finish_bonus--;
-				final_score += 1;
-				CONSUME_SCORE_SPEED = 4;
-			}
-			else
-			{
-				score_is_consumed = true;
-			}
-		}
-
-		if (score_is_consumed)
-		{
-			if (SDL_GetTicks() - last_blink_time >= BLINK_SPEED)
-			{
-				last_blink_time = SDL_GetTicks();
-				show_text = !show_text;
-			}
-		}
-
-		if (show_text)
-		{
-			mode->drawString(center_x - 4 * 17, center_y - 4 + 8 * 4, 0xF0, "PLAY AGAIN? (Y/N)");
-		}
-
-		sprintf(buffer, "%2dx HEARTS: %d", HEALTH_PRIZE_SCORE,  player_health);
-		mode->drawString(center_x - strlen(buffer) * 4, center_y - 4 - 8 * 5, 0xF0, buffer);
-		sprintf(buffer, "%2dx TIME: %d", TIME_VALUE, player_time);
-		mode->drawString(center_x - strlen(buffer) * 4, center_y - 4 - 8 * 4, 0xF0, buffer);
-		sprintf(buffer, "%2dx SCORE: %d", 1, player_score);
-		mode->drawString(center_x - strlen(buffer) * 4, center_y - 4 - 8 * 3, 0xF0, buffer);
-
-		if (finished_maze)
-		{
-			sprintf(buffer, "FINISHED MAZE: %+d", finish_bonus);
-			mode->drawString(center_x - strlen(buffer) * 4, center_y - 4 - 8 * 2, 0xF0, buffer);
-		}
-
-		sprintf(buffer, "FINAL SCORE: %d", final_score);
-		mode->drawString(center_x - strlen(buffer) * 8 / 2, center_y - 4, 0xF0, buffer);
-
-		mode->render();
-	}
+	hud->draw(mode);
+	pause_menu->draw(mode);
 }
 
 int main(int argc, char *argv[])
 {
 	CGA::GraphicsMode *mode;
 
-	// Initialize SDL
 	if (!SYSTEM::initialize(false, WINDOW_TITLE))
 	{
 		printf("Failed to initialize!\n");
@@ -1106,7 +863,6 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	// Load media
 	mode = new CGA::MODE_B();
 	mode->initialize();
 	if (!mode->isModeSet())
@@ -1116,42 +872,57 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	SDL_Event e;
+	const int SW = mode->getScreenWidth();
+	const int SH = mode->getScreenHeight();
 
+	UI::HUD        hud(SW, player.health, player.score, remaining_blocks, seconds);
+	UI::PauseMenu  pause_menu(SW, SH);
+	UI::CurtainTransition curtain(SW, SH);
+
+	pause_menu.setVisible(false);
+
+	SDL_Event e;
 	bool keep_playing = true;
+
 	while (keep_playing)
 	{
-		// TODO: This initialization block should probably move to it's own function.
+		// ---- Round setup ----
 		bool is_done = false;
 		maze = new Maze();
 		setRandSeed(maze_seed);
 		generateMaze(maze);
 
-		player.jumpTo(maze->start_column * maze->MAZE_CELL_SIZE + 3, maze->start_row * maze->MAZE_CELL_SIZE + 3);
+		player.jumpTo(maze->start_column * maze->MAZE_CELL_SIZE + 3,
+		              maze->start_row    * maze->MAZE_CELL_SIZE + 3);
 		player.is_alive = true;
-		player.health = INITIAL_HEALTH;
+		player.health   = INITIAL_HEALTH;
+		finished_maze   = false;
+		seconds         = INITIAL_SECONDS;
+		is_paused       = true;
 
-		finished_maze = false;
-		seconds = INITIAL_SECONDS;
-		is_paused = true;
+		for (int n = 0; n < MAX_BLOCKS;     n++) blocks[n].is_alive     = false;
+		for (int n = 0; n < MAX_WHIRLIGIGS; n++) whirligigs[n].is_alive = false;
 
-		for (int n = 0; n < MAX_BLOCKS; n++)
+		// ---- Open curtain ----
+		curtain.open();
+		while (!curtain.isDone())
 		{
-			blocks[n].is_alive = false;
-		}
-		for (int n = 0; n < MAX_WHIRLIGIGS; n++)
-		{
-			whirligigs[n].is_alive = false;
+			Uint32 frame_start = SDL_GetTicks();
+			curtain.update(SCREEN_TICKS_PER_FRAME);
+			drawEverything(mode, &hud, &pause_menu);
+			curtain.draw(mode);
+			mode->render();
+			Uint32 elapsed = SDL_GetTicks() - frame_start;
+			if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
 
-		openCurtainFx(mode);
-
+		// ---- Game loop ----
 		while (!is_done && player.is_alive && !finished_maze)
 		{
-			Uint32 frame_start_time = SDL_GetTicks();
+			Uint32 frame_start = SDL_GetTicks();
 
 			KEYBOARD::setScanCode(0);
-
 			while (SDL_PollEvent(&e) != 0)
 			{
 				KEYBOARD::respondToEvent(e);
@@ -1164,47 +935,45 @@ int main(int argc, char *argv[])
 					switch (e.key.keysym.sym)
 					{
 					case SDLK_ESCAPE:
-						is_done = true; // This is temporary.
+						is_done = true;
 						break;
 					case SDLK_TAB:
 						if (e.key.repeat == 0)
 						{
 							is_paused = !is_paused;
+							pause_menu.setVisible(is_paused);
 						}
 						break;
-	#ifdef ALLOW_SHOW_SOLUTION
+#ifdef ALLOW_SHOW_SOLUTION
 					case SDLK_BACKQUOTE:
 						show_solution = true;
 						break;
-	#endif
+#endif
 					}
 					break;
 				case SDL_KEYUP:
 					switch (e.key.keysym.sym)
 					{
-	#ifdef ALLOW_SHOW_SOLUTION
+#ifdef ALLOW_SHOW_SOLUTION
 					case SDLK_BACKQUOTE:
 						show_solution = false;
 						break;
-	#endif
+#endif
 					}
 					break;
 				}
-
-				//updatePlayerEvents(e);
 			}
 
-			Uint8 keysym = KEYBOARD::getScanCode();
+			if (KEYBOARD::getScanCode() == SDLK_RETURN && KEYBOARD::isAltPressed())
+				SYSTEM::toggleFullscreen();
 
-			if (keysym == SDLK_RETURN)
+			Uint32 dt = SCREEN_TICKS_PER_FRAME;
+			hud.update(dt);
+			if (is_paused)
 			{
-				if (KEYBOARD::isAltPressed())
-				{
-					SYSTEM::toggleFullscreen();
-				}
+				pause_menu.update(dt);
 			}
-
-			if (!is_paused)
+			else
 			{
 				updatePlayerEvents();
 				updatePlayer();
@@ -1213,39 +982,74 @@ int main(int argc, char *argv[])
 				updateTime();
 			}
 
-			drawEverything(mode);
-
+			drawEverything(mode, &hud, &pause_menu);
 			mode->render();
 
-			Uint32 frame_elapsed = SDL_GetTicks() - frame_start_time;
-			if (frame_elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
-			{
-				SDL_Delay(SCREEN_TICKS_PER_FRAME - frame_elapsed);
-			}
+			Uint32 elapsed = SDL_GetTicks() - frame_start;
+			if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
 
-		closeCurtainFx(mode);
+		// ---- Close curtain ----
+		curtain.closeScreen();
+		while (!curtain.isDone())
+		{
+			Uint32 frame_start = SDL_GetTicks();
+			curtain.update(SCREEN_TICKS_PER_FRAME);
+			drawEverything(mode, &hud, &pause_menu);
+			curtain.draw(mode);
+			mode->render();
+			Uint32 elapsed = SDL_GetTicks() - frame_start;
+			if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
+		}
 
 		delete maze;
+		maze = nullptr;
 
-		// TODO: There should be variable lengths of path from start to finish.
+		// ---- Score screen ----
+		UI::ScoreScreen* score_screen = new UI::ScoreScreen(
+			SW, SH, player.health, (int)seconds, player.score, finished_maze);
 
-		// Calculate the final score.
-		keep_playing = finalScoreScreen(mode);
-		if (finished_maze)
+		while (!score_screen->wantsClose())
 		{
-			maze_seed++;
+			Uint32 frame_start = SDL_GetTicks();
+
+			KEYBOARD::setScanCode(0);
+			while (SDL_PollEvent(&e) != 0)
+			{
+				KEYBOARD::respondToEvent(e);
+				if (e.type == SDL_QUIT)
+				{
+					score_screen->close();
+					is_done = true;
+				}
+			}
+
+			if (KEYBOARD::getScanCode() == SDLK_RETURN && KEYBOARD::isAltPressed())
+				SYSTEM::toggleFullscreen();
+
+			score_screen->update(SCREEN_TICKS_PER_FRAME);
+
+			mode->clearGraphicsScreen(0);
+			hud.draw(mode);
+			score_screen->draw(mode);
+			mode->render();
+
+			Uint32 elapsed = SDL_GetTicks() - frame_start;
+			if (elapsed < (Uint32)SCREEN_TICKS_PER_FRAME)
+				SDL_Delay(SCREEN_TICKS_PER_FRAME - elapsed);
 		}
+
+		keep_playing = !is_done && score_screen->playAgain();
+		delete score_screen;
+
+		if (finished_maze)
+			maze_seed++;
 	}
 
-	if (mode != NULL)
-	{
-		delete mode;
-		mode = NULL;
-	}
-
+	delete mode;
 	SYSTEM::close();
-
 	return 0;
 }
 
