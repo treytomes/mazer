@@ -39,11 +39,11 @@ namespace KEYBOARD
 	{
 		if (value)
 		{
-			SET_BIT(SYSTEM::memory[MEM_KEYFLAGS], ALT_BIT);
+			SET_BIT(SYSTEM::memory[MEM_KEYFLAGS], CTRL_BIT);
 		}
 		else
 		{
-			CLEAR_BIT(SYSTEM::memory[MEM_KEYFLAGS], ALT_BIT);
+			CLEAR_BIT(SYSTEM::memory[MEM_KEYFLAGS], CTRL_BIT);
 		}
 	}
 
@@ -51,11 +51,11 @@ namespace KEYBOARD
 	{
 		if (value)
 		{
-			SET_BIT(SYSTEM::memory[MEM_KEYFLAGS], ALT_BIT);
+			SET_BIT(SYSTEM::memory[MEM_KEYFLAGS], SHIFT_BIT);
 		}
 		else
 		{
-			CLEAR_BIT(SYSTEM::memory[MEM_KEYFLAGS], ALT_BIT);
+			CLEAR_BIT(SYSTEM::memory[MEM_KEYFLAGS], SHIFT_BIT);
 		}
 	}
 
