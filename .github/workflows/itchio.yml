@@ -1,0 +1,48 @@
+name: Publish to itch.io
+
+on:
+  release:
+    types: [published]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  ITCH_PROJECT: treytomes/mazer
+
+jobs:
+  publish:
+    name: Publish (${{ matrix.channel }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - channel: linux
+            asset: mazer-linux.tar.gz
+          - channel: windows
+            asset: mazer-windows.zip
+          - channel: osx
+            asset: mazer-macos.tar.gz
+
+    steps:
+      - name: Download release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "${{ github.event.release.tag_name }}" \
+            --repo treytomes/mazer \
+            --pattern "${{ matrix.asset }}"
+
+      - name: Install Butler
+        run: |
+          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip butler.zip
+          chmod +x butler
+          ./butler -V
+
+      - name: Push to itch.io
+        env:
+          BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
+        run: |
+          ./butler push "${{ matrix.asset }}" \
+            "${{ env.ITCH_PROJECT }}:${{ matrix.channel }}" \
+            --userversion "${{ github.event.release.tag_name }}"
