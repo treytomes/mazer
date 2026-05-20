@@ -35,10 +35,22 @@ jobs:
 
       - name: Install SDL2 (Windows)
         if: runner.os == 'Windows'
-        run: choco install sdl2 --yes
+        shell: pwsh
+        run: |
+          $url = "https://github.com/libsdl-org/SDL/releases/download/release-2.30.10/SDL2-devel-2.30.10-VC.zip"
+          Invoke-WebRequest -Uri $url -OutFile SDL2-devel.zip
+          Expand-Archive SDL2-devel.zip -DestinationPath C:\SDL2
+          # Expose the root dir so CMake can find it
+          echo "SDL2_DIR=C:\SDL2\SDL2-2.30.10\cmake" >> $env:GITHUB_ENV
+          echo "SDL2_ROOT=C:\SDL2\SDL2-2.30.10" >> $env:GITHUB_ENV
 
-      - name: Configure
+      - name: Configure (Linux/macOS)
+        if: runner.os != 'Windows'
         run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Configure (Windows)
+        if: runner.os == 'Windows'
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release "-DSDL2_DIR=$env:SDL2_DIR"
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -68,22 +80,13 @@ jobs:
           tar -czf ${{ matrix.artifact_name }}.tar.gz -C dist .
 
       # ---- Package Windows ----
-      - name: Locate SDL2.dll (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $dll = Get-ChildItem "C:\ProgramData\chocolatey" -Recurse -Filter "SDL2.dll" |
-                 Where-Object { $_.FullName -match "x64" } |
-                 Select-Object -First 1
-          echo "SDL2_DLL=$($dll.FullName)" >> $env:GITHUB_ENV
-
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist
           Copy-Item build\Release\mazer.exe dist\
-          Copy-Item "$env:SDL2_DLL" dist\
+          Copy-Item "$env:SDL2_ROOT\lib\x64\SDL2.dll" dist\
           Compress-Archive -Path dist\* -DestinationPath ${{ matrix.artifact_name }}.zip
 
       - name: Upload artifact
