@@ -50,16 +50,13 @@ jobs:
         run: |
           curl -L -o butler.zip https://github.com/itchio/butler/releases/latest/download/butler-linux-amd64.zip
           unzip butler.zip
-          ls -la
-          BUTLER_BIN=$(find . -maxdepth 2 -type f -name 'butler*' | head -1)
-          chmod +x "$BUTLER_BIN"
-          "$BUTLER_BIN" -V
-          echo "BUTLER=$BUTLER_BIN" >> $GITHUB_ENV
+          chmod +x linux-amd64/butler
+          echo "$PWD/linux-amd64" >> $GITHUB_PATH
 
       - name: Push to itch.io
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_API_KEY }}
         run: |
-          $BUTLER push "${{ matrix.asset }}" \
+          butler push "${{ matrix.asset }}" \
             "${{ env.ITCH_PROJECT }}:${{ matrix.channel }}" \
             --userversion "${{ steps.tag.outputs.value }}"
