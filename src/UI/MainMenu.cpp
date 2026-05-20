@@ -103,7 +103,7 @@ namespace UI
             if (is_selected && _blink_visible)
             {
                 int marker_x = cx - (int)strlen(label) * CHAR_W / 2 - CHAR_W * 2;
-                mode->drawChar(marker_x, item_y, 0xF0, 16, 16); // chr(16) = ►
+                mode->drawChar(marker_x, item_y, 0xF0, 16); // chr(16) = ►
             }
 
             int item_x = cx - (int)strlen(label) * CHAR_W / 2;
