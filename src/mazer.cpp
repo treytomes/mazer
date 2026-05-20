@@ -252,26 +252,21 @@ void updateDemoAI()
 	// Already reached the finish cell?  Nothing to do.
 	if (row == maze->finish_row && column == maze->finish_column) return;
 
-	const int MAX_SCORE = 9999;
+	// Dijkstra map is regenerated from finish (score 0) at demo start,
+	// so descend toward 0 to navigate to the exit.
 	int cur = maze->getDijkstra(row, column);
 	if (cur <= 0) return;
 
 	MazeCell* cell = maze->getCell(row, column);
-
-	int n_score = (row - 1) >= 0            ? maze->getDijkstra(row - 1, column) : MAX_SCORE;
-	int s_score = (row + 1) < maze->rows    ? maze->getDijkstra(row + 1, column) : MAX_SCORE;
-	int w_score = (column - 1) >= 0         ? maze->getDijkstra(row, column - 1) : MAX_SCORE;
-	int e_score = (column + 1) < maze->columns ? maze->getDijkstra(row, column + 1) : MAX_SCORE;
-
 	int target = cur - 1;
 
-	if (cell->north_open && n_score <= target)
+	if (cell->north_open && (row - 1) >= 0 && maze->getDijkstra(row - 1, column) == target)
 		player.y_target = player.y - cell_size;
-	else if (cell->south_open && s_score <= target)
+	else if (cell->south_open && (row + 1) < maze->rows && maze->getDijkstra(row + 1, column) == target)
 		player.y_target = player.y + cell_size;
-	else if (cell->west_open  && w_score <= target)
+	else if (cell->west_open && (column - 1) >= 0 && maze->getDijkstra(row, column - 1) == target)
 		player.x_target = player.x - cell_size;
-	else if (cell->east_open  && e_score <= target)
+	else if (cell->east_open && (column + 1) < maze->columns && maze->getDijkstra(row, column + 1) == target)
 		player.x_target = player.x + cell_size;
 }
 
@@ -966,9 +961,11 @@ int main(int argc, char *argv[])
 
 				bool got_input = false;
 				KEYBOARD::setScanCode(0);
+				bool surface_changed = false;
 				while (SDL_PollEvent(&e) != 0)
 				{
 					KEYBOARD::respondToEvent(e);
+					if (SYSTEM::handleWindowEvent(e)) surface_changed = true;
 					if (e.type == SDL_QUIT)
 					{
 						main_menu.close();
@@ -984,6 +981,7 @@ int main(int argc, char *argv[])
 						got_input = true;
 					}
 				}
+				if (surface_changed) mode->reinitializeSurface();
 
 				if (got_input)
 					idle_timer = 0;
@@ -1029,15 +1027,18 @@ int main(int argc, char *argv[])
 					Uint32 frame_start = SDL_GetTicks();
 
 					KEYBOARD::setScanCode(0);
+					bool surface_changed = false;
 					while (SDL_PollEvent(&e) != 0)
 					{
 						KEYBOARD::respondToEvent(e);
+						if (SYSTEM::handleWindowEvent(e)) surface_changed = true;
 						if (e.type == SDL_QUIT)
 						{
 							sfx_editor.close();
 							keep_playing = false;
 						}
 					}
+					if (surface_changed) mode->reinitializeSurface();
 
 					sfx_editor.update(SCREEN_TICKS_PER_FRAME);
 
@@ -1061,15 +1062,18 @@ int main(int argc, char *argv[])
 					Uint32 frame_start = SDL_GetTicks();
 
 					KEYBOARD::setScanCode(0);
+					bool surface_changed = false;
 					while (SDL_PollEvent(&e) != 0)
 					{
 						KEYBOARD::respondToEvent(e);
+						if (SYSTEM::handleWindowEvent(e)) surface_changed = true;
 						if (e.type == SDL_QUIT)
 						{
 							settings_screen.close();
 							keep_playing = false;
 						}
 					}
+					if (surface_changed) mode->reinitializeSurface();
 
 					settings_screen.update(SCREEN_TICKS_PER_FRAME);
 					bgm.update(SCREEN_TICKS_PER_FRAME);
@@ -1109,6 +1113,11 @@ int main(int argc, char *argv[])
 		for (int n = 0; n < MAX_BLOCKS;     n++) blocks[n].is_alive     = false;
 		for (int n = 0; n < MAX_WHIRLIGIGS; n++) whirligigs[n].is_alive = false;
 
+		// In demo mode, regenerate Dijkstra from the finish (score 0) so the
+		// AI can simply descend the gradient without getting stuck in dead ends.
+		if (demo_mode)
+			generateDijkstraMap(maze, maze->finish_row, maze->finish_column);
+
 		bgm.setParams(AUDIO::BgmThemes::Game());
 
 		// ---- Open curtain ----
@@ -1134,9 +1143,11 @@ int main(int argc, char *argv[])
 			Uint32 frame_start = SDL_GetTicks();
 
 			KEYBOARD::setScanCode(0);
+			bool surface_changed = false;
 			while (SDL_PollEvent(&e) != 0)
 			{
 				KEYBOARD::respondToEvent(e);
+				if (SYSTEM::handleWindowEvent(e)) surface_changed = true;
 				switch (e.type)
 				{
 				case SDL_QUIT:
@@ -1176,8 +1187,9 @@ int main(int argc, char *argv[])
 			if (KEYBOARD::getScanCode() == SDLK_RETURN && KEYBOARD::isAltPressed())
 			{
 				SYSTEM::toggleFullscreen();
-				mode->reinitializeSurface();
+				surface_changed = true;
 			}
+			if (surface_changed) mode->reinitializeSurface();
 
 			Uint32 dt = SCREEN_TICKS_PER_FRAME;
 			hud.update(dt);
@@ -1270,9 +1282,11 @@ int main(int argc, char *argv[])
 			Uint32 frame_start = SDL_GetTicks();
 
 			KEYBOARD::setScanCode(0);
+			bool surface_changed = false;
 			while (SDL_PollEvent(&e) != 0)
 			{
 				KEYBOARD::respondToEvent(e);
+				if (SYSTEM::handleWindowEvent(e)) surface_changed = true;
 				if (e.type == SDL_QUIT)
 				{
 					score_screen->close();
@@ -1281,7 +1295,11 @@ int main(int argc, char *argv[])
 			}
 
 			if (KEYBOARD::getScanCode() == SDL_SCANCODE_RETURN && KEYBOARD::isAltPressed())
+			{
 				SYSTEM::toggleFullscreen();
+				surface_changed = true;
+			}
+			if (surface_changed) mode->reinitializeSurface();
 
 			// Any held key doubles the tally drain speed.
 			{

@@ -71,7 +71,24 @@ bool CGA::GraphicsMode::render()
 		printf("Unable to convert screen format.  SDL error: %s\n", SDL_GetError());
 		return false;
 	}
-	if (SDL_BlitScaled(_convertedSurface, NULL, SYSTEM::screenSurface, NULL) < 0)
+
+	// Compute letterboxed/pillarboxed destination rect to preserve aspect ratio.
+	int ww = SYSTEM::screenSurface->w;
+	int wh = SYSTEM::screenSurface->h;
+	int sw = getScreenWidth();
+	int sh = getScreenHeight();
+	int scale = (ww * sh < wh * sw) ? ww / sw : wh / sh;
+	if (scale < 1) scale = 1;
+	SDL_Rect dst;
+	dst.w = sw * scale;
+	dst.h = sh * scale;
+	dst.x = (ww - dst.w) / 2;
+	dst.y = (wh - dst.h) / 2;
+
+	// Clear letterbox bars.
+	SDL_FillRect(SYSTEM::screenSurface, NULL, 0);
+
+	if (SDL_BlitScaled(_convertedSurface, NULL, SYSTEM::screenSurface, &dst) < 0)
 	{
 		printf("Unable to blit converted screen to window.  SDL error: %s\n", SDL_GetError());
 		return false;

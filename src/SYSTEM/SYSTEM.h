@@ -37,6 +37,19 @@ namespace SYSTEM
 	// The surface contained by the window
 	extern SDL_Surface* screenSurface;
 
+	// Returns true if the window surface was re-acquired (caller should reinitializeSurface).
+	// Call inside every SDL_PollEvent loop to handle fullscreen transitions.
+	inline bool handleWindowEvent(const SDL_Event& e)
+	{
+		if (e.type == SDL_WINDOWEVENT &&
+		    e.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+		{
+			screenSurface = SDL_GetWindowSurface(window);
+			return true;
+		}
+		return false;
+	}
+
 	// Everything the program uses will be stored here.
 	extern uint8_t* memory;
 

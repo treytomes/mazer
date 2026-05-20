@@ -148,3 +148,4 @@ int countDeadEnds(Maze *maze);
 */
 
 void generateMaze(Maze *maze);
+void generateDijkstraMap(Maze *maze, int start_row, int start_column);

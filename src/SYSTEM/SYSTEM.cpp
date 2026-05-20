@@ -17,15 +17,25 @@ uint8_t* SYSTEM::memory = NULL;
 //uint8_t* SYSTEM::textMemory = NULL;
 
 /*
- * Make the window as big as possible for the current screen resolution.
+ * Compute the largest integer scale that fits in the usable desktop area
+ * (excludes taskbars) with a margin for window chrome (title bar, borders).
  */
 int getScreenScale()
 {
-	SDL_DisplayMode dm;
-	SDL_GetCurrentDisplayMode(0, &dm);
-	int scaleX = (int)(dm.w / SYSTEM::SCREEN_WIDTH);
-	int scaleY = (int)(dm.h / SYSTEM::SCREEN_HEIGHT);
+	SDL_Rect usable;
+	if (SDL_GetDisplayUsableBounds(0, &usable) != 0)
+	{
+		// Fallback: use display mode minus a conservative chrome reserve.
+		SDL_DisplayMode dm;
+		SDL_GetCurrentDisplayMode(0, &dm);
+		usable = { 0, 0, dm.w, dm.h };
+	}
+	// Reserve ~60px for title bar + borders so the window fits visibly.
+	const int CHROME_RESERVE = 60;
+	int scaleX = usable.w / SYSTEM::SCREEN_WIDTH;
+	int scaleY = (usable.h - CHROME_RESERVE) / SYSTEM::SCREEN_HEIGHT;
 	int scale = (scaleX < scaleY) ? scaleX : scaleY;
+	if (scale < 1) scale = 1;
 	return scale;
 }
 
@@ -43,7 +53,7 @@ bool SYSTEM::initialize(bool fullscreen, const char* title)
 	int windowHeight = SCREEN_HEIGHT * scale;
 
 	// Create window
-	int windowFlags = fullscreen ? SDL_WINDOW_FULLSCREEN : 0;
+	int windowFlags = fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0;
 	window = SDL_CreateWindow(title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, windowWidth, windowHeight, windowFlags);
 	if (window == NULL)
 	{
@@ -99,22 +109,28 @@ void SYSTEM::close()
 
 void SYSTEM::toggleFullscreen()
 {
-	Uint32 fullscreenFlag = SDL_WINDOW_FULLSCREEN;
+	Uint32 fullscreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
 	bool isFullscreen = SDL_GetWindowFlags(SYSTEM::window) & fullscreenFlag;
 
-	//if (isFullscreen)
-	//{
-	//	SDL_SetWindowSize(SYSTEM::window, SYSTEM::WINDOW_WIDTH, SYSTEM::WINDOW_HEIGHT);
-	//}
-	//else
-	//{
-	//	SDL_SetWindowSize(SYSTEM::window, mode->getScreenWidth(), mode->getScreenHeight());
-	//}
+	if (isFullscreen)
+	{
+		// Re-add borders before leaving fullscreen so the WM redecorates the window.
+		SDL_SetWindowBordered(SYSTEM::window, SDL_TRUE);
+	}
 
 	int result = SDL_SetWindowFullscreen(SYSTEM::window, isFullscreen ? 0 : fullscreenFlag);
 	if (result < 0)
 	{
 		printf("Unable to toggle fullscreen.  SDL error: %s\n", SDL_GetError());
+		return;
+	}
+
+	if (isFullscreen)
+	{
+		// Restore to the computed windowed size and re-center.
+		int scale = getScreenScale();
+		SDL_SetWindowSize(SYSTEM::window, SCREEN_WIDTH * scale, SCREEN_HEIGHT * scale);
+		SDL_SetWindowPosition(SYSTEM::window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 	}
 
 	SYSTEM::screenSurface = SDL_GetWindowSurface(SYSTEM::window);
