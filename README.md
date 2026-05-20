@@ -5,6 +5,8 @@ A retro maze game with CGA-style graphics built with SDL2. Navigate a procedural
 [![CI](https://github.com/treytomes/mazer/actions/workflows/ci.yml/badge.svg)](https://github.com/treytomes/mazer/actions/workflows/ci.yml)
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/treytomes)
 
+![Mazer gameplay screenshot](screenshots/screenshot-0.png)
+
 ## Building
 
 **Dependencies:** SDL2 (`sudo apt install libsdl2-dev` on Ubuntu/Debian)
@@ -21,14 +23,15 @@ You start at the green flashing **S** marker and must reach the red flashing **F
 
 ### Controls
 
-| Key | Action |
-|-----|--------|
-| Arrow keys | Move |
-| Shift + Arrow | Place a block in that direction |
-| Tab | Pause / unpause |
-| `` ` `` (hold) | Show the solution path |
-| Alt + Enter | Toggle fullscreen |
-| Escape | Quit |
+| Keyboard | Gamepad | Action |
+|----------|---------|--------|
+| Arrow keys | D-pad / Left stick | Move / navigate menus |
+| Shift + Arrow | Right shoulder + D-pad | Place a block in that direction |
+| Tab | Start | Pause / unpause |
+| `` ` `` (hold) | Right shoulder (hold) | Show the solution path |
+| Enter | A | Confirm / select |
+| Escape | B | Back / quit |
+| Alt + Enter | — | Toggle fullscreen |
 
 ### HUD
 
