@@ -10,6 +10,7 @@ jobs:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: ubuntu-latest
@@ -35,14 +36,7 @@ jobs:
 
       - name: Install SDL2 (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $url = "https://github.com/libsdl-org/SDL/releases/download/release-2.30.10/SDL2-devel-2.30.10-VC.zip"
-          Invoke-WebRequest -Uri $url -OutFile SDL2-devel.zip
-          Expand-Archive SDL2-devel.zip -DestinationPath C:\SDL2
-          # Expose the root dir so CMake can find it
-          echo "SDL2_DIR=C:\SDL2\SDL2-2.30.10\cmake" >> $env:GITHUB_ENV
-          echo "SDL2_ROOT=C:\SDL2\SDL2-2.30.10" >> $env:GITHUB_ENV
+        run: vcpkg install sdl2:x64-windows
 
       - name: Configure (Linux/macOS)
         if: runner.os != 'Windows'
@@ -50,7 +44,9 @@ jobs:
 
       - name: Configure (Windows)
         if: runner.os == 'Windows'
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release "-DSDL2_DIR=$env:SDL2_DIR"
+        run: >
+          cmake -B build -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build
         run: cmake --build build --config Release --parallel
@@ -63,30 +59,20 @@ jobs:
         if: runner.os == 'Windows'
         run: ./build/tests/Release/mazer_tests.exe --reporter compact
 
-      # ---- Package Linux ----
-      - name: Package (Linux)
-        if: runner.os == 'Linux'
+      - name: Package (Linux/macOS)
+        if: runner.os != 'Windows'
         run: |
           mkdir dist
           cp build/mazer dist/
           tar -czf ${{ matrix.artifact_name }}.tar.gz -C dist .
 
-      # ---- Package macOS ----
-      - name: Package (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          mkdir dist
-          cp build/mazer dist/
-          tar -czf ${{ matrix.artifact_name }}.tar.gz -C dist .
-
-      # ---- Package Windows ----
       - name: Package (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Path dist
           Copy-Item build\Release\mazer.exe dist\
-          Copy-Item "$env:SDL2_ROOT\lib\x64\SDL2.dll" dist\
+          Copy-Item "$env:VCPKG_INSTALLATION_ROOT\installed\x64-windows\bin\SDL2.dll" dist\
           Compress-Archive -Path dist\* -DestinationPath ${{ matrix.artifact_name }}.zip
 
       - name: Upload artifact
@@ -103,16 +89,20 @@ jobs:
       contents: write
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           merge-multiple: true
 
       - name: Create release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            mazer-linux.tar.gz
-            mazer-windows.zip
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "${{ github.ref_name }}" \
+            --generate-notes \
+            mazer-linux.tar.gz \
+            mazer-windows.zip \
             mazer-macos.tar.gz
-          generate_release_notes: true
