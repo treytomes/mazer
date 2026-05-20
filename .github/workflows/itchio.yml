@@ -2,7 +2,12 @@ name: Publish to itch.io
 
 on:
   release:
-    types: [published]
+    types: [published, edited]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag to publish (e.g. v1.0.0)'
+        required: true
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -24,11 +29,20 @@ jobs:
             asset: mazer-macos.tar.gz
 
     steps:
+      - name: Resolve tag name
+        id: tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "value=${{ github.event.release.tag_name }}" >> $GITHUB_OUTPUT
+          fi
+
       - name: Download release asset
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download "${{ github.event.release.tag_name }}" \
+          gh release download "${{ steps.tag.outputs.value }}" \
             --repo treytomes/mazer \
             --pattern "${{ matrix.asset }}"
 
@@ -45,4 +59,4 @@ jobs:
         run: |
           ./butler push "${{ matrix.asset }}" \
             "${{ env.ITCH_PROJECT }}:${{ matrix.channel }}" \
-            --userversion "${{ github.event.release.tag_name }}"
+            --userversion "${{ steps.tag.outputs.value }}"
