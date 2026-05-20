@@ -50,6 +50,8 @@ jobs:
         run: |
           curl -L -o butler.zip https://github.com/itchio/butler/releases/latest/download/butler-linux-amd64.zip
           unzip butler.zip
+          # Binary may extract as 'butler' or 'butler-linux-amd64'; normalise to 'butler'.
+          [ -f butler ] || mv butler-linux-amd64 butler
           chmod +x butler
           ./butler -V
 
