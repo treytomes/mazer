@@ -9,6 +9,9 @@ SDL_Window* SYSTEM::window = NULL;
 // The surface contained by the window
 SDL_Surface* SYSTEM::screenSurface = NULL;
 
+// First connected game controller, or NULL if none.
+SDL_GameController* SYSTEM::controller = NULL;
+
 //// Graphics operations will write to this array.
 //uint8_t* SYSTEM::graphicsMemory = NULL;
 
@@ -42,7 +45,7 @@ int getScreenScale()
 bool SYSTEM::initialize(bool fullscreen, const char* title)
 {
 	// Initialize SDL
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) < 0)
 	{
 		printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
 		return false;
@@ -63,6 +66,16 @@ bool SYSTEM::initialize(bool fullscreen, const char* title)
 
 	// Get window surface
 	screenSurface = SDL_GetWindowSurface(window);
+
+	// Open the first available game controller.
+	for (int i = 0; i < SDL_NumJoysticks(); i++)
+	{
+		if (SDL_IsGameController(i))
+		{
+			controller = SDL_GameControllerOpen(i);
+			break;
+		}
+	}
 
 	memory = (uint8_t*)calloc(MEM_SIZE, 1);
 	if (memory == NULL)
@@ -95,6 +108,12 @@ void SYSTEM::close()
 		memory = NULL;
 		//graphicsMemory = NULL;
 		//textMemory = NULL;
+	}
+
+	if (controller != NULL)
+	{
+		SDL_GameControllerClose(controller);
+		controller = NULL;
 	}
 
 	if (window != NULL)

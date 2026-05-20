@@ -47,14 +47,14 @@ namespace UI
                 _blink_visible = !_blink_visible;
             }
 
-            // Y / N closes the screen.
+            // Y/Return/A = play again; N/Escape/B = back to menu.
             Uint8 key = KEYBOARD::getScanCode();
-            if (key == SDL_SCANCODE_Y)
+            if (key == SDL_SCANCODE_Y || key == SDL_SCANCODE_RETURN || key == SDL_SCANCODE_KP_ENTER)
             {
                 _play_again = true;
                 close();
             }
-            else if (key == SDL_SCANCODE_N)
+            else if (key == SDL_SCANCODE_N || key == SDL_SCANCODE_ESCAPE)
             {
                 _play_again = false;
                 close();

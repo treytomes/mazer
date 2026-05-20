@@ -37,6 +37,9 @@ namespace SYSTEM
 	// The surface contained by the window
 	extern SDL_Surface* screenSurface;
 
+	// First connected game controller, or NULL if none.
+	extern SDL_GameController* controller;
+
 	// Returns true if the window surface was re-acquired (caller should reinitializeSurface).
 	// Call inside every SDL_PollEvent loop to handle fullscreen transitions.
 	inline bool handleWindowEvent(const SDL_Event& e)

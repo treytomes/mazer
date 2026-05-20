@@ -328,7 +328,14 @@ void updatePlayerEvents() //SDL_Event &e)
 		}
 	}
 
-	if (state[g_settings.key_up])
+	bool gp_up    = KEYBOARD::isGamepadUp();
+	bool gp_down  = KEYBOARD::isGamepadDown();
+	bool gp_left  = KEYBOARD::isGamepadLeft();
+	bool gp_right = KEYBOARD::isGamepadRight();
+	// Right shoulder acts like shift (place block).
+	if (KEYBOARD::isGamepadShoulder()) should_place_block = true;
+
+	if (state[g_settings.key_up] || gp_up)
 	{
 		if (should_place_block)
 		{
@@ -342,7 +349,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.y_target = player.y - cell_size;
 		}
 	}
-	else if (state[g_settings.key_down])
+	else if (state[g_settings.key_down] || gp_down)
 	{
 		if (should_place_block)
 		{
@@ -356,7 +363,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.y_target = player.y + cell_size;
 		}
 	}
-	else if (state[g_settings.key_left])
+	else if (state[g_settings.key_left] || gp_left)
 	{
 		if (should_place_block)
 		{
@@ -370,7 +377,7 @@ void updatePlayerEvents() //SDL_Event &e)
 			player.x_target = player.x - cell_size;
 		}
 	}
-	else if (state[g_settings.key_right])
+	else if (state[g_settings.key_right] || gp_right)
 	{
 		if (should_place_block)
 		{
@@ -1181,6 +1188,33 @@ int main(int argc, char *argv[])
 						show_solution = false;
 #endif
 					break;
+				case SDL_CONTROLLERBUTTONDOWN:
+					if (demo_mode)
+					{
+						is_done = true;
+					}
+					else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_START)
+					{
+						is_paused = !is_paused;
+						pause_menu.setVisible(is_paused);
+					}
+					else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_B)
+					{
+						is_done = true;
+					}
+#ifdef ALLOW_SHOW_SOLUTION
+					else if (e.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
+					{
+						show_solution = true;
+					}
+#endif
+					break;
+				case SDL_CONTROLLERBUTTONUP:
+#ifdef ALLOW_SHOW_SOLUTION
+					if (e.cbutton.button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER)
+						show_solution = false;
+#endif
+					break;
 				}
 			}
 
@@ -1301,12 +1335,14 @@ int main(int argc, char *argv[])
 			}
 			if (surface_changed) mode->reinitializeSurface();
 
-			// Any held key doubles the tally drain speed.
+			// Any held key or gamepad button doubles the tally drain speed.
 			{
 				const Uint8* keys = SDL_GetKeyboardState(NULL);
 				bool any_held = false;
 				for (int k = 0; k < SDL_NUM_SCANCODES && !any_held; k++)
 					any_held = keys[k] != 0;
+				if (!any_held)
+					any_held = KEYBOARD::isGamepadConfirm() || KEYBOARD::isGamepadBack();
 				score_screen->setSpeedMultiplier(any_held ? 2 : 1);
 			}
 
