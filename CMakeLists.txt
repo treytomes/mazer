@@ -46,6 +46,11 @@ add_executable(mazer
 	"src/AUDIO/BgmPlayer.cpp"
 	"src/bitIcons.h")
 
+# SDL2::SDL2main provides the WinMain entry-point shim required on Windows.
+# It must be listed before SDL2::SDL2 so the linker resolves it first.
+if(TARGET SDL2::SDL2main)
+	target_link_libraries(mazer SDL2::SDL2main)
+endif()
 target_link_libraries(mazer SDL2::SDL2)
 target_include_directories(mazer PRIVATE ${SDL2_INCLUDE_DIRS})
 
@@ -54,17 +59,10 @@ if(MAZER_LOGGING)
 	target_compile_definitions(mazer PRIVATE MAZER_LOGGING)
 endif()
 
+# Copy SDL2.dll next to the executable on Windows so it can run in-place.
 if(WIN32)
-	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-		add_custom_command(TARGET mazer POST_BUILD			# Adds a post-build event to dossim
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different	# which executes "cmake - E copy_if_different..."
-				"${SDL2MAIN_LIBRARY}/x64/SDL2.dll"			# <--this is in-file
-				$<TARGET_FILE_DIR:mazer>)					# <--this is out-file path
-	else()
-		add_custom_command(TARGET mazer POST_BUILD			# Adds a post-build event to dossim
-			COMMAND ${CMAKE_COMMAND} -E copy_if_different	# which executes "cmake - E copy_if_different..."
-				"${SDL2MAIN_LIBRARY}/x86/SDL2.dll"			# <--this is in-file
-				$<TARGET_FILE_DIR:mazer>)					# <--this is out-file path
-	endif()
-
-endif(WIN32)
+	add_custom_command(TARGET mazer POST_BUILD
+		COMMAND ${CMAKE_COMMAND} -E copy_if_different
+			$<TARGET_FILE:SDL2::SDL2>
+			$<TARGET_FILE_DIR:mazer>)
+endif()
